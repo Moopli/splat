@@ -1,4 +1,4 @@
 splat
 =====
 
-Splat is a CHIP 8 emulator
+Splat is going to be a CHIP-8 emulator.
