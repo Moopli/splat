@@ -17,7 +17,7 @@ int main(int argc, char ** argv)
    // No casting is necessary to access these, just use array
    // syntax. To deal with the issue of the fact that we're
    // taking the values from an int, if a value is less than
-   // F (i.e., 15), the opcode will be shorter. This is why
+   // F+1 (i.e., 16), the opcode will be shorter. This is why
    // there is a placeholder "0" appended to the string if
    // the current int is too small.
    unsigned char a = 0;
