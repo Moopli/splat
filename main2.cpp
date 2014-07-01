@@ -1,125 +1,72 @@
-//TODO: Figure out how to best store the opcodes from the ROM
-//within some data structure (stringstream, string, array,
-//something else, etc.).
+#include <algorithm>
+#include <cstdint>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
+#include <stdexcept>
+#include <string>
 
-#include <array>     //array
-#include <cstdint>   //uint16_t
-#include <cstdlib>   //EXIT_FAILURE
-#include <fstream>   //ifstream
-#include <iomanip>   //setw, setfill, hex, uppercase
-#include <iostream>  //cout, cerr
-#include <iterator>  //istream_iterator
-#include <sstream>   //ostringstream
-#include <stdexcept> //runtime_error
-#include <string>    //string
-#include <vector>    //vector
-
-//read this if you haven't and rethink this decision
-//stackoverflow.com/questions/1452721/why-is-using-namespace-std-considered-a-bad-practice-in-c
 using namespace std;
 
-const int OPCODE_LENGTH = 4;
+using Byte = unsigned char;
+const int RAM_SIZE = 0x1000;
+const int PC = 0x200;
+
+Byte RAM[RAM_SIZE];
 
 //Represents an opcode.
 class Opcode
 {
-   //read the opcode
-   friend istream &operator>>(istream &is, Opcode &opcode);
-
 public:
-   //initialize to 0
-   Opcode() : m_opcode{string(OPCODE_LENGTH, '?')}
+   Opcode(uint16_t opcode) : m_opcode{opcode}
    {
    }
 
-   //get value
-   uint16_t code() const
-   {
-      size_t pos;
-      auto ret = stoi(m_opcode, &pos, 16);
-
-      if (pos != m_opcode.size())
-      {
-         throw runtime_error("Failed to convert opcode " + m_opcode + " to uint16_t.");
-      }
-
-      return ret;
-   }
-
-   //get hex string representation
-   string toString() const
+   uint16_t get() const
    {
       return m_opcode;
    }
 
 private:
-   string m_opcode;
+   uint16_t m_opcode;
 };
 
-//Extracts an opcode from an input stream.
-istream &operator>>(istream &is, Opcode &opcode)
-{
-   //2 characters is 4 nibbles
-   array<char, OPCODE_LENGTH / 2> buffer;
-   is.read(buffer.data(), OPCODE_LENGTH / 2);
-
-   if (is.gcount() != OPCODE_LENGTH / 2)
-   {
-      is.setstate(ios::failbit);
-   }
-
-   ostringstream oss;
-   for (auto c : buffer)
-   {
-      auto uc = static_cast<unsigned char>(c); //otherwise negative values suck
-      oss << hex << uppercase << setw(2) << setfill('0') << static_cast<int>(uc);
-   }
-
-#if 0
-    if (!opcode.isValid()) //or something
-    {
-        is.setstate(ios::failbit);
-    }
-#endif
-
-   opcode.m_opcode = oss.str();
-   return is;
-}
-
-//Inserts an opcode to an output stream.
-ostream &operator<<(ostream &os, Opcode opcode)
-{
-   return os << opcode.toString();
-}
-
-//reads a ROM file as a list of opcodes
-vector<Opcode> readRom(string filename)
+void readRom(const string &filename)
 {
    ifstream fin{filename, ios::binary};
+   istream_iterator<Byte> first(fin);
+   copy_n(first, RAM_SIZE - PC, RAM + PC);
 
-   //read opcodes into vector until the stream fails
-   istream_iterator<Opcode> first{fin}, last;
-   vector<Opcode> ret{first, last};
-
-   //if we haven't hit the end of the stream, there's a problem
    if (!fin.eof())
    {
-      throw runtime_error("Failed to read ROM.");
+      throw runtime_error("ROM is too big.");
    }
+}
 
-   return ret;
+void dumpWord(Byte *p)
+{
+   for (auto i = 0; i < 2; ++i)
+   {
+      cout << hex << uppercase << setfill('0') << setw(2) << static_cast<unsigned>(p[i]);
+   }
+}
+
+void dumpRAM()
+{
+   for (auto i = 0; i < RAM_SIZE; i += 2)
+   {
+      dumpWord(RAM + i);
+      cout << '\n';
+   }
 }
 
 int main()
 {
    try
    {
-      //read PONG and output opcodes
-      auto opcodes = readRom("../c8games/PONG");
-      for (auto oc : opcodes)
-      {
-         cout << oc << '\n';
-      }
+      readRom("../c8games/PONG");
+      dumpRAM();
    }
 
    catch (const exception &e)
