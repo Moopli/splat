@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include "opcodeProcessing.h"
 
 using namespace std;
 
