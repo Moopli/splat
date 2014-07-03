@@ -43,7 +43,25 @@ int main(int argc, char ** argv)
    {
       cout << opcodes.str()[i];
    }
-   
+   cout << "\n\nActually important stuff:\n";
+
+   // This is a test
+   CHIP8state currState("../c8games/PONG");
+   int i = 0;
+   ifstream rom2("../c8games/PONG");
+   while (rom2 >> a)
+   {
+      currState.RAM[512 + i] = a;
+      cout << "a = " << (short)a << endl;
+      cout << "i = " << i << endl;
+      i++;
+   }
+   rom2.close();
+   while (currState.PC >= 512 && currState.PC < 4096)
+   {
+      determineInstruction(currState);
+      cout << "currState.PC = " << currState.PC << endl;
+   }
    // stuff
    return 0;
 }
