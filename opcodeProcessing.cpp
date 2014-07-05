@@ -60,12 +60,14 @@ void determineInstruction(CHIP8state &currState)
          {
             // return from subroutine -- we'll need to keep track of the value
             // of PC before jumping to a subroutine
-            dbgprint("0x00EE: return\n");
+            dbgprint("0x00EE: return from subroutine\n");
+            dbgprint("PC was ", currState.PC, '\n');
             // We assume the stack can always be popped, because if this is being
             // called, we should assume the program knows what it's doing.
             // If we ever make a ROM, it would be handy to check.
             currState.PC = currState.theStack.top();
             currState.theStack.pop();
+            dbgprint("PC is now ", currState.PC, '\n');
             dbgprint("Returned from subroutine!\n");
          }
 
@@ -86,9 +88,10 @@ void determineInstruction(CHIP8state &currState)
          dbgprint("PC is now ", hex, currState.PC, '\n');
          break;
       case 0x2:
-         currState.theStack.push(currState.PC);
-         currState.PC = nnn;
          dbgprint("0x2nnn: call subroutine at nnn\n");
+         currState.theStack.push(currState.PC);
+         dbgprint("PC was ", currState.PC, '\n');
+         currState.PC = nnn;
          dbgprint("PC is now ", hex, currState.PC, '\n');
          break;
       case 0x3:
