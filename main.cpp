@@ -1,18 +1,36 @@
-#include <iostream>
+#include <algorithm>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
+#include <stdexcept>
 #include <string>
-#include <sstream>
 #include "opcodeProcessing.h"
 
 using namespace std;
 
 // TODO: Don't hardcode the ROM path!
 
+void readRom(const string &filename, CHIP8state &currState)
+{
+   ifstream fin(filename, ios::binary);
+   istreambuf_iterator<char> first(fin); // buf for unformatted extractions
+
+   // copy file to RAM starting at PC until 0x1FFF
+   copy_n(first, currState.RAM.size() - currState.PC, currState.RAM.data() + currState.PC);
+
+   // make sure that EOF was reached (or there's only whitespace left)
+   if (!(fin >> ws).eof())
+   {
+      throw runtime_error("ROM is too big.");
+   }
+}
+
 int main(int, char **)
 {
-   ifstream rom("../c8games/PONG", fstream::in);
+   // ifstream rom("../c8games/PONG", fstream::in);
 
-   stringstream opcodes;
+   // stringstream opcodes;
    // Each opcode is stored in four successive chars, followed by
    // a newline. E.g., "5F20\n"
    // No casting is necessary to access these, just use array
@@ -21,46 +39,48 @@ int main(int, char **)
    // F+1 (i.e., 16), the opcode will be shorter. This is why
    // there is a placeholder "0" appended to the string if
    // the current int is too small.
-   unsigned char a = 0;
-   int count = 0;
-   //  When dealing with hex stuff, we need this intermediate hex stream object
-   // Syntax:
-   // sstreamObject << hex << (int)currentVar;
-   while (rom >> hex >> a)
-   {
-      if (a < 16)
-         opcodes << "0"; // Placeholder for parsing
-      opcodes << hex << (int)a;
-      if (count % 2 == 1)
-         opcodes << hex << endl;
-      count++;
-   }
-   rom.close();
-   // See what the data looks like yourself:
-   cout << "String:\n" << opcodes.str() << endl;
-   cout << "Or in loop:\n";
-   for (int i = 0; i < (int)opcodes.str().size(); i++)
-   {
-      cout << opcodes.str()[i];
-   }
-   cout << "\n\nActually important stuff:\n";
+   // unsigned char a = 0;
+   // int count = 0;
+   // //  When dealing with hex stuff, we need this intermediate hex stream
+   // object
+   // // Syntax:
+   // // sstreamObject << hex << (int)currentVar;
+   // while (rom >> hex >> a)
+   // {
+   //    if (a < 16)
+   //       opcodes << "0"; // Placeholder for parsing
+   //    opcodes << hex << (int)a;
+   //    if (count % 2 == 1)
+   //       opcodes << hex << endl;
+   //    count++;
+   // }
+   // rom.close();
+   // // See what the data looks like yourself:
+   // cout << "String:\n" << opcodes.str() << endl;
+   // cout << "Or in loop:\n";
+   // for (int i = 0; i < (int)opcodes.str().size(); i++)
+   // {
+   //    cout << opcodes.str()[i];
+   // }
+   // cout << "\n\nActually important stuff:\n";
 
    // This is a test
    CHIP8state currState("../c8games/PONG");
-   int i = 0;
-   ifstream rom2("../c8games/PONG");
-   while (rom2 >> a)
-   {
-      currState.RAM[512 + i] = a;
-      cout << "a = " << (short)a << endl;
-      cout << "i = " << i << endl;
-      i++;
-   }
-   rom2.close();
+   readRom("../c8games/PONG", currState);
+   // int i = 0;
+   // ifstream rom2("../c8games/PONG");
+   // while (rom2 >> a)
+   // {
+   //    currState.RAM[512 + i] = a;
+   //    cout << "a = " << (short)a << endl;
+   //    cout << "i = " << i << endl;
+   //    i++;
+   // }
+   // rom2.close();
    while (currState.PC >= 512 && currState.PC < 4096)
    {
       determineInstruction(currState);
-      cout << "currState.PC = " << currState.PC << endl;
+      cout << "currState.PC = " << hex << currState.PC << endl;
    }
    // stuff
    return 0;
