@@ -58,6 +58,11 @@ void determineInstruction(CHIP8state &currState)
             //return from subroutine -- we'll need to keep track of the value
             //of PC before jumping to a subroutine
             dbgprint("case 0x00EE\n");
+            // We assume the stack can always be popped, because if this is being
+            // called, we should assume the program knows what it's doing.
+            currState.PC = currState.theStack.top();
+            currState.theStack.pop();
+            dbgprint("Returned from subroutine!\n");
          }
 
          else
@@ -73,32 +78,63 @@ void determineInstruction(CHIP8state &currState)
       case 0x1000:
          currState.PC = opcode - 0x1000;
          dbgprint("case 0x1000\n");
+         cout << "PC was " << currState.PC << endl;
+         currState.PC = opcode & 0x0FFF;
+         cout << "PC is now " << currState.PC << endl;
          break;
       case 0x2000:
          currState.theStack.push(currState.PC);
          currState.PC = opcode - 0x2000;
          dbgprint("case 0x2000\n");
+         dbgprint("Called subroutine!!\n");
+         cout << "PC is now " << currState.PC << endl;
          break;
       case 0x3000:
          //skip next instruction if Vx equals a constant
          //if Vx == kk, PC += 4
          //else, PC += 2
          dbgprint("case 0x3000\n");
-         currState.PC += 2;
+         if (currState.V[(opcode - 0x4000)/256] != (opcode & 0xFF))
+         {
+            currState.PC += 4;
+            cout << "Jump 4\n";
+         }
+         else
+         {
+            currState.PC += 2;
+            cout << "Jump 2\n";
+         }
          break;
       case 0x4000:
          //skip next instruction if Vx doesn't equal a constant
-         //if Vx != kk, PC += 4
-         //else, PC += 2
          dbgprint("case 0x4000\n");
-         currState.PC += 2;
+         if (currState.V[(opcode - 0x4000)/256] != (opcode & 0xFF))
+         {
+            currState.PC += 4;
+            cout << "Jump 4\n";
+         }
+         else
+         {
+            currState.PC += 2;
+            cout << "Jump 2\n";
+         }
          break;
       case 0x5000:
          //skip next instruction if two registers are equal
          //if Vx == Vy, PC += 4
          //else, PC == 2
          dbgprint("case 0x5000\n");
-         currState.PC += 2;
+         //if Vx == Vy, PC += 4
+         if (currState.V[(opcode - 0x9000)/256] == currState.V[(opcode - 0x9000)/256])
+         {
+            currState.PC += 4;
+            cout << "Jump 4\n";
+         }
+         else
+         {
+            currState.PC += 2;
+            cout << "Jump 2\n";
+         }
          break;
       case 0x6000:
          //set Vx to a constant
@@ -112,8 +148,12 @@ void determineInstruction(CHIP8state &currState)
          break;
       case 0x7000:
          //add a constant to Vx, and store in Vx
-         //Vx += kk
+         x = (opcode - 0x7000) / 256;
+         constant = opcode & 0x00FF;
+         currState.V[x] += constant;
          dbgprint("case 0x7000\n");
+         std::cout << "V" << dec << (int)x << " set to " << dec << \
+         constant << " so now equals " << (short)currState.V[x] << hex << std::endl;
          currState.PC += 2;
          break;
       case 0x8000:
@@ -124,22 +164,32 @@ void determineInstruction(CHIP8state &currState)
          break;
       case 0x9000:
          //skip next instruction if two registers are not equal
-         //if Vx != Vy, PC += 4
-         //else, PC += 2
          dbgprint("case 0x9000\n");
-         currState.PC += 2;
+         //if Vx != Vy, PC += 4
+         if (currState.V[(opcode - 0x9000)/256] != currState.V[(opcode - 0x9000)/256])
+         {
+            currState.PC += 4;
+            cout << "Jump 4\n";
+         }
+         else
+         {
+            currState.PC += 2;
+            cout << "Jump 2\n";
+         }
          break;
       case 0xA000:
          //set I register to a constant
-         //I = opcode & 0x0FFF;
          dbgprint("case 0xA000\n");
+         currState.I = opcode & 0xFFF;
+         cout << "I register set to " << dec << currState.I << hex << endl;
          currState.PC += 2;
          break;
       case 0xB000:
          //jump to location nnn + V0
-         //PC = (opcode & 0x0FFF) + V0;
          dbgprint("case 0xB000\n");
-         currState.PC += 2;
+         cout << "PC was " << currState.PC << endl;
+         currState.PC = (opcode & 0x0FFF) + currState.V[0];
+         cout << "PC is now " << currState.PC << endl;
          break;
       case 0xC000:
          //set Vx to random byte & kk
