@@ -8,7 +8,7 @@ using namespace std;
 
 // TODO: Don't hardcode the ROM path!
 
-int main(int argc, char ** argv)
+int main(int, char **)
 {
    ifstream rom("../c8games/PONG", fstream::in);
 
@@ -29,10 +29,10 @@ int main(int argc, char ** argv)
    while (rom >> hex >> a)
    {
       if (a < 16)
-          opcodes << "0"; // Placeholder for parsing
+         opcodes << "0"; // Placeholder for parsing
       opcodes << hex << (int)a;
       if (count % 2 == 1)
-          opcodes << hex << endl;
+         opcodes << hex << endl;
       count++;
    }
    rom.close();
