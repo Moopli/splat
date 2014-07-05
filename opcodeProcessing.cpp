@@ -38,8 +38,11 @@ void dbgprint(Args &&... args)
 //values of PC; this is necessary for returning from a subroutine
 void determineInstruction(CHIP8state &currState)
 {
+   cout << hex;
    short opcode = (currState.RAM[currState.PC] << 8) | currState.RAM[currState.PC + 1];
-   dbgprint("PROCESSING ", showbase, hex, opcode, '\n');
+   dbgprint("\nPROCESSING ", showbase, hex, opcode, '\n');
+   unsigned char x;
+   short constant;
 
    switch (opcode & 0xF000)
    {
@@ -99,8 +102,12 @@ void determineInstruction(CHIP8state &currState)
          break;
       case 0x6000:
          //set Vx to a constant
-         //Vx = kk
+         x = (opcode - 0x6000) / 256;
+         constant = opcode & 0x00FF;
+         currState.V[(size_t)x] = constant;
          dbgprint("case 0x6000\n");
+         std::cout << "V" << dec << (int)x << " set to " << \
+         constant << " = " << dec << (int)constant << hex << std::endl;
          currState.PC += 2;
          break;
       case 0x7000:
