@@ -30,20 +30,110 @@ void dbgprint(Args &&... args)
 }
 #endif
 
-//@param (short) opcode: the current opcode being processed
-//@param (int *) RAM: a pointer to the RAM
-//@param (short) PC: a reference to the current value of PC
-//@param (stack<short>) theStack: a reference to a stack of the previous
-// values of PC; this is necessary for returning from a subroutine
+/*
+* @brief Take a bool array and display it on screen. This does
+* not currently use a GL. TODO: Use a GL!
+*
+* @param display (array<array<bool, 32, 64>) a 64 * 32 pixel
+* screen to print
+*
+* @note "88" corresponds to an on pixel; "  " corresponds to
+* an off pixel
+*/
+void printToScreen(const array<array<bool, 32>, 64> & display)
+{
+   cout << endl;
+   for (int i = 0; i < 64; i++)
+      cout << "--";
+   cout << endl;
+   for (int i = 0; i < 32; i++)
+   {
+      cout << '|';
+      for (int j = 0; j < 64; j++)
+      {
+         if (display[j][i] == true)
+            cout << "88";
+         else
+            cout << "  ";
+      }
+      cout << '|' << endl;
+   }
+   for (int i = 0; i < 64; i++)
+      cout << "--";
+   cout << endl;
+}
+/*
+* @brief Set all boolean value in a 2D array to false
+*
+* @param display (array<array<bool, 32>, 64>) a 64 * 32 pixel
+* screen to print
+*/
+void clearDisplay(const array<array<bool, 32>, 64> & display)
+{
+   for (int j = 0; j < 32; j++)
+   {
+      for (int i = 0; i < 64; i++)
+      {
+         display[i][j] == false;
+      }
+   }
+   dbgprint("CLEARED DISPLAY\n");
+}
+
+/*
+* @brief Load a byte of a sprite into the display, at location (x, y)
+*
+* @param sprite (unsigned char) a byte in the sprite to display
+*
+* @param display (array<array<bool, 32>, 64> a 64 * 32 pixel screen
+* which stores the values
+*
+* @param x (int) the x-coordinate of the position to place the sprite
+*
+* @param x (int) the y-coordinate of the position to place the sprite
+*
+* @note Mask is used to get the value of the bits in the byte. Sprites
+* are stored as bytes, where '0' corresponds to an off pixel, and '1'
+* corresponds to an on pixel. We AND the two values (sprite and mask)
+* and right-shift mask, so if the position of the '1' in mask is at
+* the same position of a '1' in sprite, then the corresponding pixel
+* is set to TRUE. If the position of the '1' in mask is at the same
+* position of a '0' in sprite, then the corresponding pixel is set to
+* FALSE. Recall: 1 & 1 = 1; 1 & 0 = 0
+*/
+void loadSprite(unsigned char sprite, array<array<bool, 32>, 64> & display, int x, int y)
+{
+   short mask = 128; // 1000 0000
+   for (int i = 0; i < 8; i++)
+   {
+      display[x + i][y] = (bool)(sprite & mask);
+      dbgprint("sprite = ", dec, (int)sprite, '\n');
+      dbgprint("mask = ", dec, (int)mask, '\n');
+      dbgprint("sprite & mask = ", (int)(sprite & mask), " = ", (bool)(sprite & mask), hex, '\n');
+      mask = mask >> 1; // shift right
+   }
+}
+
+/*
+* @param (short) opcode: the current opcode being processed
+*
+* @param (int *) RAM: a pointer to the RAM
+*
+* @param (short) PC: a reference to the current value of PC
+*
+* @param (stack<short>) theStack: a reference to a stack of the previous
+* values of PC; this is necessary for returning from a subroutine
+*/
 void determineInstruction(CHIP8state &currState)
 {
    uint16_t opcode = (currState.RAM[currState.PC] << 8) | currState.RAM[currState.PC + 1];
    dbgprint("\nPROCESSING ", showbase, uppercase, hex, opcode, '\n');
    int x = getSecondNibble(opcode);
    int y = getThirdNibble(opcode);
-   // int n = getLastNibble(opcode);
+   int n = getLastNibble(opcode);
    int kk = getLastByte(opcode);
    uint16_t nnn = getLastThreeNibbles(opcode);
+   short sprite = 0;
 
    static mt19937 randGen{random_device{}()};
 
@@ -54,6 +144,8 @@ void determineInstruction(CHIP8state &currState)
          {
             // clear screen
             dbgprint("0x00E0: clear screen\n");
+            clearDisplay(currState.display);
+            printToScreen(currState.display);
          }
 
          else if (opcode == 0x00EE)
@@ -107,7 +199,6 @@ void determineInstruction(CHIP8state &currState)
 
          else
          {
-
             currState.PC += 2;
             dbgprint("Jump 2\n");
          }
@@ -124,7 +215,6 @@ void determineInstruction(CHIP8state &currState)
 
          else
          {
-
             currState.PC += 2;
             dbgprint("Jump 2\n");
          }
@@ -144,7 +234,6 @@ void determineInstruction(CHIP8state &currState)
 
          else
          {
-
             currState.PC += 2;
             dbgprint("Jump 2\n");
          }
@@ -212,13 +301,21 @@ void determineInstruction(CHIP8state &currState)
          auto newVal = dist(randGen) & kk;
          currState.V[x] = newVal;
          dbgprint("V", dec, x, " set to ", newVal, '\n');
-
          currState.PC += 2;
          break;
       }
       case 0xD:
          // display sprite on screen
          dbgprint("case 0xDxyn\n");
+         dbgprint("load ", n, " byte sprite at I (", currState.I);
+         dbgprint(") to (", (short)currState.V[x], ", ", (short)currState.V[y], ")\n");
+         for (int i = 0; i < n; i++)
+         {
+            sprite = currState.RAM[currState.I + i];
+            // take bits of this sprite and put into display
+            loadSprite(sprite, currState.display, currState.V[x], currState.V[y] + i);
+         }
+         printToScreen(currState.display);
          currState.PC += 2;
          break;
       case 0xE:
