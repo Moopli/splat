@@ -9,11 +9,6 @@
 
 using namespace std;
 
-<<<<<<< HEAD
-int main(int, char **)
-{
-   ifstream rom("../c8games/PONG", ios::binary);
-=======
 // TODO: Don't hardcode the ROM path!
 
 void readRom(const string &filename, CHIP8state &currState)
@@ -34,7 +29,6 @@ void readRom(const string &filename, CHIP8state &currState)
 int main(int, char **)
 {
    // ifstream rom("../c8games/PONG", fstream::in);
->>>>>>> 6a04d0f0e54d09bdb46b3627e4f384ab1721518d
 
    // stringstream opcodes;
    // Each opcode is stored in four successive chars, followed by
@@ -45,7 +39,7 @@ int main(int, char **)
    // F+1 (i.e., 16), the opcode will be shorter. This is why
    // there is a placeholder "0" appended to the string if
    // the current int is too small.
-   // unsigned char a = 0;
+   unsigned char a = 0;
    // int count = 0;
    // //  When dealing with hex stuff, we need this intermediate hex stream
    // object
@@ -72,7 +66,6 @@ int main(int, char **)
 
    // This is a test
    CHIP8state currState("../c8games/PONG");
-<<<<<<< HEAD
    int i = 0;
    ifstream rom2("../c8games/PONG", ios::binary);
    while (rom2 >> a)
@@ -83,7 +76,6 @@ int main(int, char **)
       i++;
    }
    rom2.close();
-=======
    readRom("../c8games/PONG", currState);
    // int i = 0;
    // ifstream rom2("../c8games/PONG");
@@ -95,7 +87,6 @@ int main(int, char **)
    //    i++;
    // }
    // rom2.close();
->>>>>>> 6a04d0f0e54d09bdb46b3627e4f384ab1721518d
    while (currState.PC >= 512 && currState.PC < 4096)
    {
       determineInstruction(currState);
