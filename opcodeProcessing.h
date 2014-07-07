@@ -1,3 +1,5 @@
+#pragma once
+
 #include "stateData.h"
 
 using namespace std;
