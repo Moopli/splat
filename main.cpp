@@ -6,11 +6,9 @@
 
 using namespace std;
 
-// TODO: Don't hardcode the ROM path!
-
 int main(int, char **)
 {
-   ifstream rom("../c8games/PONG", fstream::in);
+   ifstream rom("../c8games/PONG", ios::binary);
 
    stringstream opcodes;
    // Each opcode is stored in four successive chars, followed by
@@ -48,7 +46,7 @@ int main(int, char **)
    // This is a test
    CHIP8state currState("../c8games/PONG");
    int i = 0;
-   ifstream rom2("../c8games/PONG");
+   ifstream rom2("../c8games/PONG", ios::binary);
    while (rom2 >> a)
    {
       currState.RAM[512 + i] = a;
