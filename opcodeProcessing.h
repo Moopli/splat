@@ -16,4 +16,4 @@ uint16_t getLastThreeNibbles(uint16_t opcode);
 unsigned char getLastByte(uint16_t opcode);
 
 void process0x8000Codes(CHIP8state &currState, uint16_t opcode);
-void process0xF000Codes(CHIP8state &currState, uint16_t opcode);
+void process0xF000Codes(CHIP8state &currState, int x, int kk);

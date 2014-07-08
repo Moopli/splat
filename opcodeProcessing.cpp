@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <initializer_list>
 #include <iostream>
@@ -340,7 +341,7 @@ void determineInstruction(CHIP8state &currState)
          break;
       case 0xF:
          // requires more processing - maybe have another function to do this?
-         process0xF000Codes(currState, opcode);
+         process0xF000Codes(currState, x, kk);
          dbgprint("0xFx??: miscellaneous\n");
          currState.PC += 2;
          break;
@@ -349,6 +350,71 @@ void determineInstruction(CHIP8state &currState)
          // I'd say stop, but through an exception and a nice error message, and our program not dying.
          dbgprint("unknown opcode: ", opcode, "!\n");
          currState.PC += 2;
+         break;
+   }
+}
+
+void process0xF000Codes(CHIP8state &currState, int x, int kk)
+{
+   switch (kk)
+   {
+      case 0x07:
+         dbgprint("0xFx07: set Vx to DT\n");
+         // currState.V[x] = getDT();
+         // dbgprint("Vx is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         break;
+
+      case 0x0A:
+         dbgprint("0xFx0A: wait for key press and store key in Vx\n");
+         // currState.V[x] = waitKey();
+         // dbgprint("Vx is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         break;
+
+      case 0x15:
+         dbgprint("0xFx15: set DT to Vx\n");
+         // setDT(currState.V[x]);
+         // dbgprint("DT is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         break;
+
+      case 0x18:
+         dbgprint("0xFx15: set ST to Vx\n");
+         // setST(currState.V[x]);
+         // dbgprint("ST is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         break;
+
+      case 0x1E:
+         dbgprint("0xFx1E: set I to I + Vx\n");
+         currState.I += currState.V[x];
+         dbgprint("I is now ", hex, currState.I, '\n');
+         break;
+
+      case 0x29:
+         dbgprint("0xFx29: set I to location of sprite for digit Vx\n");
+         currState.I = currState.V[x] * 5; // digit X is at memory location X * 5
+         dbgprint("I is now ", hex, currState.I, '\n');
+         break;
+
+      case 0x33:
+         dbgprint("0xFx33: Store BCD representation of Vx starting at memory locations I\n");
+         currState.RAM[currState.I] = currState.V[x] / 100;            // first digit
+         currState.RAM[currState.I + 1] = (currState.V[x] % 100) / 10; // second digit
+         currState.RAM[currState.I + 2] = currState.V[x] % 10;         // third digit
+         dbgprint("RAM at I, I + 1, I + 2: ", static_cast<int>(currState.RAM[currState.I]), ' ');
+         dbgprint(static_cast<int>(currState.RAM[currState.I + 1]), static_cast<int>(currState.RAM[currState.I + 2]), '\n');
+         break;
+
+      case 0x55:
+         dbgprint("0xFx55: Store registers V0 through Vx in memory starting at I\n");
+         copy_n(begin(currState.V), x, next(begin(currState.RAM), currState.I));
+         break;
+
+      case 0x65:
+         dbgprint("0xFx65: Read registers V0 through Vx from memory starting at I\n");
+         copy_n(next(begin(currState.RAM), currState.I), x, begin(currState.V));
+         break;
+
+      default:
+         dbgprint("Unrecognized opcode: 0xF", x, kk, '\n');
          break;
    }
 }
