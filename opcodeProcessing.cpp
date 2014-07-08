@@ -263,7 +263,6 @@ void determineInstruction(CHIP8state &currState)
          currState.PC += 2;
          break;
       case 0x8:
-         // requires more processing - maybe have another function to do this?
          dbgprint("0x8xy?: binary operation between Vx and Vy\n");
          process0x8000Codes(currState, opcode);
          currState.PC += 2;
@@ -340,7 +339,6 @@ void determineInstruction(CHIP8state &currState)
          currState.PC += 2;
          break;
       case 0xF:
-         // requires more processing - maybe have another function to do this?
          process0xF000Codes(currState, x, kk);
          dbgprint("0xFx??: miscellaneous\n");
          currState.PC += 2;
