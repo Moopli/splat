@@ -352,6 +352,125 @@ void determineInstruction(CHIP8state &currState)
    }
 }
 
+int getNibbleAt(uint16_t opcode, int pos)
+{
+   assert(0 <= pos && pos <= 3);
+
+   auto nibblesToShift = 3 - pos;
+   auto bitsToShift = 4 * nibblesToShift;
+   auto shifted = opcode >> bitsToShift;
+
+   return shifted & 0xF;
+}
+
+int getFirstNibble(uint16_t opcode)
+{
+   return getNibbleAt(opcode, 0);
+}
+
+int getSecondNibble(uint16_t opcode)
+{
+   return getNibbleAt(opcode, 1);
+}
+
+int getThirdNibble(uint16_t opcode)
+{
+   return getNibbleAt(opcode, 2);
+}
+
+int getLastNibble(uint16_t opcode)
+{
+   return getNibbleAt(opcode, 3);
+}
+
+uint16_t getLastThreeNibbles(uint16_t opcode)
+{
+   return opcode & 0x0FFF;
+}
+
+unsigned char getLastByte(uint16_t opcode)
+{
+   return opcode & 0xFF;
+}
+
+void process0x8000Codes(CHIP8state &currState, uint16_t opcode)
+{
+   (void)opcode; // shut up possible unused parameter warning (until we use it)
+   assert((opcode & 0xF000) == 0x8000);
+   unsigned char x = getSecondNibble(opcode);
+   unsigned char y = getThirdNibble(opcode);
+   switch (getLastNibble(opcode))
+   {
+      case 0:
+         // Set V[x] to V[y]
+         dbgprint("Setting Vx (", (short)currState.V[x], ") to Vy (", (short)currState.V[y], ")\n");
+         currState.V[x] = currState.V[y];
+         dbgprint("Vx is now: ", (short)currState.V[x], "\n");
+         break;
+      case 1:
+         dbgprint("Vx = Vx OR Vy");
+         dbgprint("Vx = ", (short)currState.V[x], " OR ", (short)currState.V[y], "\n");
+         // Set V[x] to V[x] OR V[y]
+         currState.V[x] |= currState.V[y];
+         dbgprint("Vx is now: ", (short)currState.V[x], "\n");
+         break;
+      case 2:
+         dbgprint("Vx = Vx AND Vy\n");
+         dbgprint("Vx = ", (short)currState.V[x], " AND ", (short)currState.V[y], "\n");
+         // Set V[x] to V[x] AND V[y]
+         currState.V[x] &= currState.V[y];
+         dbgprint("Vx is now ", (short)currState.V[x], "\n");
+         break;
+      case 3:
+         dbgprint("V[x] = V[x] XOR V[y]\n");
+         dbgprint("Vx = ", (short)currState.V[x], "\nVy = ", (short)currState.V[y], "\n");
+         // Set V[x] to V[x] XOR V[y]
+         currState.V[x] ^= currState.V[y];
+         dbgprint("Vx is now: ", (short)currState.V[x], "\n");
+         break;
+      case 4:
+         dbgprint("V[x] = V[x] + V[y]; Vf = carry\n");
+         // Set V[x] to V[x] + V[y], and set Vf to 1 if there is a carry
+         dbgprint((short)currState.V[x], " = ", (short)currState.V[x], " + ", (short)currState.V[y], "\n");
+         currState.V[0xF] = (currState.V[x] + currState.V[y] > 255);
+         currState.V[x] += currState.V[y];
+         dbgprint("V[x] is now ", (short)currState.V[x], "\nVf = ", (short)currState.V[0xF], "\n");
+         break;
+      case 5:
+         dbgprint("V[x] = V[x] - V[y]\n");
+         // Set V[x] to V[x] - V[y], and set Vf to NOT borrow
+         dbgprint((short)currState.V[x], " = ", (short)currState.V[x], " - ", (short)currState.V[y], "\n");
+         currState.V[0xF] = (currState.V[x] > currState.V[y]);
+         currState.V[x] = currState.V[x] - currState.V[y];
+         dbgprint("V[x] is now: ", (short)currState.V[x], "\nVf = ", (short)currState.V[0xF], "\n");
+         break;
+      case 6:
+         // Shift V[x] right
+         dbgprint("currState.V[x] = ", (short)currState.V[x], "\n");
+         currState.V[0xF] = getLastNibble(currState.V[x]) & 00000001;
+         currState.V[x] = currState.V[x] >> 1; // divide by 2
+         dbgprint("After right shift: ", (short)currState.V[x], "\n");
+         break;
+      case 7:
+         // Set V[x] = V[y] - V[x], and set Vf to NOT borrow
+         dbgprint("V[x] = V[y] - V[x]; V[f] = !BORROW\n");
+         dbgprint((short)currState.V[x], " = ", (short)currState.V[y], " - ", (short)currState.V[x], "\n");
+         currState.V[0xF] = (currState.V[y] > currState.V[x]);
+         currState.V[x] = currState.V[y] - currState.V[x];
+         dbgprint("V[x] = ", (short)currState.V[x], "\n");
+         break;
+      case 0xE:
+         dbgprint("Left shift V[x] = ", (short)currState.V[x], "\n");
+         currState.V[0xF] = (currState.V[x] & 10000000);
+         currState.V[x] = currState.V[x] << 1; // multiply by 2
+         dbgprint("V[x] = ", (short)currState.V[x], hex, "\n");
+         break;
+      default:
+         dbgprint("An error occurred!\nInvalid instruction: ", hex, opcode, "\n");
+         break;
+   }
+}
+
 void process0xF000Codes(CHIP8state &currState, int x, int kk)
 {
    switch (kk)
@@ -415,129 +534,4 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          dbgprint("Unrecognized opcode: 0xF", x, kk, '\n');
          break;
    }
-}
-
-int getNibbleAt(uint16_t opcode, int pos)
-{
-   assert(0 <= pos && pos <= 3);
-
-   auto nibblesToShift = 3 - pos;
-   auto bitsToShift = 4 * nibblesToShift;
-   auto shifted = opcode >> bitsToShift;
-
-   return shifted & 0xF;
-}
-
-int getFirstNibble(uint16_t opcode)
-{
-   return getNibbleAt(opcode, 0);
-}
-
-int getSecondNibble(uint16_t opcode)
-{
-   return getNibbleAt(opcode, 1);
-}
-
-int getThirdNibble(uint16_t opcode)
-{
-   return getNibbleAt(opcode, 2);
-}
-
-int getLastNibble(uint16_t opcode)
-{
-   return getNibbleAt(opcode, 3);
-}
-
-uint16_t getLastThreeNibbles(uint16_t opcode)
-{
-   return opcode & 0x0FFF;
-}
-
-unsigned char getLastByte(uint16_t opcode)
-{
-   return opcode & 0xFF;
-}
-
-void process0x8000Codes(CHIP8state & currState, uint16_t opcode)
-{
-   (void)opcode; // shut up possible unused parameter warning (until we use it)
-   assert((opcode & 0xF000) == 0x8000);
-   unsigned char x = getSecondNibble(opcode);
-   unsigned char y = getThirdNibble(opcode);
-   switch(getLastNibble(opcode))
-   {
-      case 0:
-         // Set V[x] to V[y]
-         dbgprint("Setting Vx (", (short)currState.V[x], ") to Vy (", (short)currState.V[y], ")\n");
-         currState.V[x] = currState.V[y];
-         dbgprint("Vx is now: ", (short)currState.V[x], "\n");
-      break;
-      case 1:
-         dbgprint("Vx = Vx OR Vy");
-         dbgprint("Vx = ", (short)currState.V[x], " OR ", (short)currState.V[y], "\n");
-         // Set V[x] to V[x] OR V[y]
-         currState.V[x] |= currState.V[y];
-         dbgprint("Vx is now: ", (short)currState.V[x], "\n");
-      break;
-      case 2:
-         dbgprint("Vx = Vx AND Vy\n");
-         dbgprint("Vx = ", (short)currState.V[x], " AND ", (short)currState.V[y], "\n");
-         // Set V[x] to V[x] AND V[y]
-         currState.V[x] &= currState.V[y];
-         dbgprint("Vx is now ", (short)currState.V[x], "\n");
-      break;
-      case 3:
-         dbgprint("V[x] = V[x] XOR V[y]\n");
-         dbgprint("Vx = ", (short)currState.V[x], "\nVy = ", (short)currState.V[y], "\n");
-         // Set V[x] to V[x] XOR V[y]
-         currState.V[x] ^= currState.V[y];
-         dbgprint("Vx is now: ", (short)currState.V[x], "\n");
-      break;
-      case 4:
-         dbgprint("V[x] = V[x] + V[y]; Vf = carry\n");
-         // Set V[x] to V[x] + V[y], and set Vf to 1 if there is a carry
-         dbgprint((short)currState.V[x], " = ", (short)currState.V[x], " + ", (short)currState.V[y], "\n");
-         currState.V[0xF] = (currState.V[x] + currState.V[y] > 255);
-         currState.V[x] += currState.V[y];
-         dbgprint("V[x] is now ", (short)currState.V[x], "\nVf = ", (short)currState.V[0xF], "\n");
-      break;
-      case 5:
-         dbgprint("V[x] = V[x] - V[y]\n"); 
-         // Set V[x] to V[x] - V[y], and set Vf to NOT borrow
-         dbgprint((short)currState.V[x], " = ", (short)currState.V[x], " - ", (short)currState.V[y], "\n");
-         currState.V[0xF] = (currState.V[x] > currState.V[y]);
-         currState.V[x] = currState.V[x] - currState.V[y];
-         dbgprint("V[x] is now: ", (short)currState.V[x], "\nVf = ", (short)currState.V[0xF], "\n");
-      break;
-      case 6:
-         // Shift V[x] right
-         dbgprint("currState.V[x] = ", (short)currState.V[x], "\n");
-         currState.V[0xF] = getLastNibble(currState.V[x]) & 00000001;
-         currState.V[x] = currState.V[x] >> 1; // divide by 2
-         dbgprint("After right shift: ", (short)currState.V[x], "\n");
-      break;
-      case 7:
-         // Set V[x] = V[y] - V[x], and set Vf to NOT borrow
-         dbgprint("V[x] = V[y] - V[x]; V[f] = !BORROW\n");
-         dbgprint((short)currState.V[x], " = ", (short)currState.V[y], " - ", (short)currState.V[x], "\n");
-         currState.V[0xF] = (currState.V[y] > currState.V[x]);
-         currState.V[x] = currState.V[y] - currState.V[x];
-         dbgprint("V[x] = ", (short)currState.V[x], "\n");
-      break;
-      case 0xE:
-         dbgprint("Left shift V[x] = ", (short)currState.V[x], "\n");
-         currState.V[0xF] = (currState.V[x] & 10000000);
-         currState.V[x] = currState.V[x] << 1; // multiply by 2
-         dbgprint("V[x] = ", (short)currState.V[x], hex, "\n");
-      break;
-      default:
-          dbgprint("An error occurred!\nInvalid instruction: ", hex, opcode, "\n");
-      break;
-   }
-}
-
-void process0xF000Codes(CHIP8state &, uint16_t opcode)
-{
-   (void)opcode; // shut up possible unused parameter warning (until we use it)
-   assert((opcode & 0xF000) == 0xF000);
 }

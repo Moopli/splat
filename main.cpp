@@ -5,6 +5,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <vector>
 #include "opcodeProcessing.h"
 
 using namespace std;
@@ -28,10 +29,13 @@ void readRom(const string &filename, CHIP8state &currState)
    }
 }
 
-int main(int, char **)
+int main(int argc, char **argv)
 {
-   CHIP8state currState("../c8games/PONG");
-   readRom("../c8games/PONG", currState);
+   vector<string> args(argv, argv + argc);
+   string filename = (args.size() > 1) ? args[1] : "../c8games/PONG";
+
+   CHIP8state currState(filename);
+   readRom(filename, currState);
    fillDigitSprites(currState);
    while (currState.PC >= 512 && currState.PC < 4096)
    {
