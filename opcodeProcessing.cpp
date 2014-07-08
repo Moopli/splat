@@ -40,7 +40,7 @@ void dbgprint(Args &&... args)
 * @note "88" corresponds to an on pixel; "  " corresponds to
 * an off pixel
 */
-void printToScreen(const array<array<bool, 32>, 64> & display)
+void printToScreen(const array<array<bool, 32>, 64> &display)
 {
    cout << endl;
    for (int i = 0; i < 64; i++)
@@ -68,13 +68,13 @@ void printToScreen(const array<array<bool, 32>, 64> & display)
 * @param display (array<array<bool, 32>, 64>) a 64 * 32 pixel
 * screen to print
 */
-void clearDisplay(const array<array<bool, 32>, 64> & display)
+void clearDisplay(array<array<bool, 32>, 64> &display)
 {
    for (int j = 0; j < 32; j++)
    {
       for (int i = 0; i < 64; i++)
       {
-         display[i][j] == false;
+         display[i][j] = false;
       }
    }
    dbgprint("CLEARED DISPLAY\n");
@@ -101,17 +101,23 @@ void clearDisplay(const array<array<bool, 32>, 64> & display)
 * position of a '0' in sprite, then the corresponding pixel is set to
 * FALSE. Recall: 1 & 1 = 1; 1 & 0 = 0
 */
-void loadSprite(unsigned char sprite, array<array<bool, 32>, 64> & display, int x, int y)
+bool loadSprite(unsigned char sprite, array<array<bool, 32>, 64> &display, int x, int y)
 {
    short mask = 128; // 1000 0000
+   bool erased = false;
    for (int i = 0; i < 8; i++)
    {
-      display[x + i][y] = (bool)(sprite & mask);
+      display[x + i][y] ^= (bool)(sprite & mask);
+      if (!display[x + i][y])
+      {
+         erased = true;
+      }
       dbgprint("sprite = ", dec, (int)sprite, '\n');
       dbgprint("mask = ", dec, (int)mask, '\n');
       dbgprint("sprite & mask = ", (int)(sprite & mask), " = ", (bool)(sprite & mask), hex, '\n');
       mask = mask >> 1; // shift right
    }
+   return erased;
 }
 
 /*
@@ -309,11 +315,15 @@ void determineInstruction(CHIP8state &currState)
          dbgprint("case 0xDxyn\n");
          dbgprint("load ", n, " byte sprite at I (", currState.I);
          dbgprint(") to (", (short)currState.V[x], ", ", (short)currState.V[y], ")\n");
+         currState.V[15] = 0;
          for (int i = 0; i < n; i++)
          {
             sprite = currState.RAM[currState.I + i];
             // take bits of this sprite and put into display
-            loadSprite(sprite, currState.display, currState.V[x], currState.V[y] + i);
+            if (loadSprite(sprite, currState.display, currState.V[x], currState.V[y] + i))
+            {
+               currState.V[15] = 1;
+            }
          }
          printToScreen(currState.display);
          currState.PC += 2;
