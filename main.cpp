@@ -11,6 +11,8 @@ using namespace std;
 
 // TODO: Don't hardcode the ROM path!
 
+void fillDigitSprites(CHIP8state &currState);
+
 void readRom(const string &filename, CHIP8state &currState)
 {
    ifstream fin(filename, ios::binary);
@@ -30,6 +32,7 @@ int main(int, char **)
 {
    CHIP8state currState("../c8games/PONG");
    readRom("../c8games/PONG", currState);
+   fillDigitSprites(currState);
    while (currState.PC >= 512 && currState.PC < 4096)
    {
       determineInstruction(currState);
@@ -37,4 +40,29 @@ int main(int, char **)
    }
    // stuff
    return 0;
+}
+
+void fillBytes(unsigned char *start, initializer_list<unsigned char> bytes)
+{
+   copy(begin(bytes), end(bytes), start);
+}
+
+void fillDigitSprites(CHIP8state &currState)
+{
+   fillBytes(&currState.RAM[0], {0xF0, 0x90, 0x90, 0x90, 0xF0});  // 0
+   fillBytes(&currState.RAM[5], {0x20, 0x60, 0x20, 0x20, 0x70});  // 1
+   fillBytes(&currState.RAM[10], {0xF0, 0x10, 0xF0, 0x80, 0xF0}); // 2
+   fillBytes(&currState.RAM[15], {0xF0, 0x10, 0xF0, 0x10, 0xF0}); // 3
+   fillBytes(&currState.RAM[20], {0x90, 0x90, 0xF0, 0x10, 0x10}); // 4
+   fillBytes(&currState.RAM[25], {0xF0, 0x80, 0xF0, 0x10, 0xF0}); // 5
+   fillBytes(&currState.RAM[30], {0xF0, 0x80, 0xF0, 0x90, 0xF0}); // 6
+   fillBytes(&currState.RAM[35], {0xF0, 0x10, 0x20, 0x40, 0x40}); // 7
+   fillBytes(&currState.RAM[40], {0xF0, 0x90, 0xF0, 0x90, 0xF0}); // 8
+   fillBytes(&currState.RAM[45], {0xF0, 0x90, 0xF0, 0x10, 0xF0}); // 9
+   fillBytes(&currState.RAM[50], {0xF0, 0x90, 0xF0, 0x90, 0x90}); // A
+   fillBytes(&currState.RAM[55], {0xE0, 0x90, 0xE0, 0x90, 0xE0}); // B
+   fillBytes(&currState.RAM[60], {0xF0, 0x80, 0x80, 0x80, 0xF0}); // C
+   fillBytes(&currState.RAM[65], {0xE0, 0x90, 0x90, 0x90, 0xE0}); // D
+   fillBytes(&currState.RAM[70], {0xF0, 0x80, 0xF0, 0x80, 0xF0}); // E
+   fillBytes(&currState.RAM[75], {0xF0, 0x80, 0xF0, 0x80, 0x80}); // F
 }
