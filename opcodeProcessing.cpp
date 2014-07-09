@@ -104,6 +104,9 @@ void clearDisplay(array<array<bool, 32>, 64> &display)
 */
 bool loadSprite(unsigned char sprite, array<array<bool, 32>, 64> &display, int x, int y)
 {
+   x %= 64;
+   y %= 32;
+
    short mask = 128; // 1000 0000
    bool erased = false;
    for (int i = 0; i < 8; i++)
