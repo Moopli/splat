@@ -8,7 +8,6 @@
 #include "opcodeProcessing.h"
 #include <thread>
 #include <CImg.h>
-#define NDEBUG
 
 using namespace cimg_library;
 
