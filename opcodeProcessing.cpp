@@ -6,6 +6,11 @@
 #include <random>
 #include <utility>
 #include "opcodeProcessing.h"
+#include <thread>
+#include <CImg.h>
+#define NDEBUG
+
+using namespace cimg_library;
 
 // move this somewhere useful later
 // take a list of ints and do nothing
@@ -32,36 +37,69 @@ void dbgprint(Args &&... args)
 #endif
 
 /*
-* @brief Take a bool array and display it on screen. This does
-* not currently use a GL. TODO: Use a GL!
+ * @brief A simple scaling algorithm - a helper
+ * function for printToScreen()
+ * 
+ * @param img The CImg to change pixels in.
+ *
+ * @param x, y The position in the CImg to change.
+ *
+ * @param colour The colour to change the pixel to.
+ * 
+ */
+void quadrupleAreaPixels(CImg<float> & img, int x, int y, float colour)
+{
+   img(x * 4, y * 4, 0, 0) = colour;
+   img(x * 4 + 1, y * 4, 0, 0) = colour;
+   img(x * 4, y * 4 + 1, 0, 0) = colour;
+   img(x * 4 + 1, y * 4 + 1, 0, 0) = colour;
+
+   img(x * 4 + 2, y * 4, 0, 0) = colour;
+   img(x * 4 + 3, y * 4, 0, 0) = colour;
+   img(x * 4 + 2, y * 4 + 1, 0, 0) = colour;
+   img(x * 4 + 3, y * 4 + 1, 0, 0) = colour;
+
+   img(x * 4, y * 4 + 2, 0, 0) = colour;
+   img(x * 4 + 1, y * 4 + 2, 0, 0) = colour;
+   img(x * 4, y * 4 + 3, 0, 0) = colour;
+   img(x * 4 + 1, y * 4 + 3, 0, 0) = colour;
+
+   img(x * 4 + 2, y * 4 + 2, 0, 0) = colour;
+   img(x * 4 + 3, y * 4 + 2, 0, 0) = colour;
+   img(x * 4 + 2, y * 4 + 3, 0, 0) = colour;
+   img(x * 4 + 3, y * 4 + 3, 0, 0) = colour;
+}
+
+/*
+* @brief Take a bool array and display it on screen. This
+* uses the graphics library CImg
 *
 * @param display (array<array<bool, 32, 64>) a 64 * 32 pixel
 * screen to print
-*
-* @note "88" corresponds to an on pixel; "  " corresponds to
-* an off pixel
+* @param currState The current state of the ROM
 */
-void printToScreen(const array<array<bool, 32>, 64> &display)
+void printToScreen(const array<array<bool, 32>, 64> &display, CHIP8state & currState)
 {
-   cout << endl;
-   for (int i = 0; i < 64; i++)
-      cout << "--";
-   cout << endl;
-   for (int i = 0; i < 32; i++)
+   int scalingFactor = 4;
+   if (!currState.cDisplay)
    {
-      cout << '|';
-      for (int j = 0; j < 64; j++)
-      {
-         if (display[j][i] == true)
-            cout << "88";
-         else
-            cout << "  ";
-      }
-      cout << '|' << endl;
+      currState.cDisplay = new CImgDisplay(64 * scalingFactor, 32 * scalingFactor, "", 3, false, false);
    }
-   for (int i = 0; i < 64; i++)
-      cout << "--";
-   cout << endl;
+
+   cimg_library::CImg<float> img(64 * scalingFactor, 32 * scalingFactor, 1, 3);
+   img.fill(0);
+   
+   for (int j = 0; j < 32; j++)
+   {
+      for (int i = 0; i < 64; i++)
+      {
+         if (display[i][j] == true)
+         {
+            quadrupleAreaPixels(img, i, j, 0xFFFFFF);
+         }
+      }
+   }
+   currState.cDisplay->display(img);
 }
 /*
 * @brief Set all boolean value in a 2D array to false
@@ -155,7 +193,7 @@ void determineInstruction(CHIP8state &currState)
             // clear screen
             dbgprint("0x00E0: clear screen\n");
             clearDisplay(currState.display);
-            printToScreen(currState.display);
+            printToScreen(currState.display, currState);
          }
 
          else if (opcode == 0x00EE)
@@ -328,7 +366,7 @@ void determineInstruction(CHIP8state &currState)
                currState.V[15] = 1;
             }
          }
-         printToScreen(currState.display);
+         printToScreen(currState.display, currState);
          currState.PC += 2;
          break;
       case 0xE:

@@ -7,10 +7,11 @@
 #include <string>
 #include <vector>
 #include "opcodeProcessing.h"
+#include <thread>
+#include <CImg.h>
 
 using namespace std;
-
-// TODO: Don't hardcode the ROM path!
+using namespace cimg_library;
 
 void fillDigitSprites(CHIP8state &currState);
 
@@ -29,20 +30,24 @@ void readRom(const string &filename, CHIP8state &currState)
    }
 }
 
-int main(int argc, char **argv)
+void runRom(string filename)
 {
-   vector<string> args(argv, argv + argc);
-   string filename = (args.size() > 1) ? args[1] : "../c8games/PONG";
-
    CHIP8state currState(filename);
    readRom(filename, currState);
    fillDigitSprites(currState);
    while (currState.PC >= 512 && currState.PC < 4096)
    {
       determineInstruction(currState);
-      cout << "currState.PC = " << hex << currState.PC << endl;
    }
-   // stuff
+}
+
+int main(int argc, char **argv)
+{
+   vector<string> args(argv, argv + argc);
+   string filename = (args.size() > 1) ? args[1] : "../c8games/PONG";
+   thread mainThread(runRom, filename);
+   mainThread.join();
+   
    return 0;
 }
 

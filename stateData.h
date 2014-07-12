@@ -4,8 +4,10 @@
 #include <iostream>
 #include <stack>
 #include <string>
+#include <CImg.h>
 
 using namespace std;
+using namespace cimg_library;
 
 struct CHIP8state
 {
@@ -21,4 +23,5 @@ struct CHIP8state
    array<bool, 16> keys; // 16
    array<array<bool, 32>, 64> display;
    string filename;
+   CImgDisplay * cDisplay; // declare on your own
 };
