@@ -36,37 +36,43 @@ void dbgprint(Args &&... args)
 #endif
 
 /*
- * @brief A simple scaling algorithm - a helper
- * function for printToScreen()
+ * @brief A simple scaling algorithm - a helper function for
+ *        printToScreen()
  * 
  * @param img The CImg to change pixels in.
  *
  * @param x, y The position in the CImg to change.
  *
  * @param colour The colour to change the pixel to.
- * 
+ *
+ * @note The reason for the rgb variable is that the last value
+ *       for accessing data in the CImg refers to the different
+ *       colour components (red = 0; green = 1; blue = 2)
  */
 void quadrupleAreaPixels(CImg<float> & img, int x, int y, float colour)
 {
-   img(x * 4, y * 4, 0, 0) = colour;
-   img(x * 4 + 1, y * 4, 0, 0) = colour;
-   img(x * 4, y * 4 + 1, 0, 0) = colour;
-   img(x * 4 + 1, y * 4 + 1, 0, 0) = colour;
+   for (int rgb = 0; rgb < 3; rgb++)
+   {
+      img(x * 4, y * 4, 0, rgb) = colour;
+      img(x * 4 + 1, y * 4, 0, rgb) = colour;
+      img(x * 4, y * 4 + 1, 0, rgb) = colour;
+      img(x * 4 + 1, y * 4 + 1, 0, rgb) = colour;
 
-   img(x * 4 + 2, y * 4, 0, 0) = colour;
-   img(x * 4 + 3, y * 4, 0, 0) = colour;
-   img(x * 4 + 2, y * 4 + 1, 0, 0) = colour;
-   img(x * 4 + 3, y * 4 + 1, 0, 0) = colour;
+      img(x * 4 + 2, y * 4, 0, rgb) = colour;
+      img(x * 4 + 3, y * 4, 0, rgb) = colour;
+      img(x * 4 + 2, y * 4 + 1, 0, rgb) = colour;
+      img(x * 4 + 3, y * 4 + 1, 0, rgb) = colour;
 
-   img(x * 4, y * 4 + 2, 0, 0) = colour;
-   img(x * 4 + 1, y * 4 + 2, 0, 0) = colour;
-   img(x * 4, y * 4 + 3, 0, 0) = colour;
-   img(x * 4 + 1, y * 4 + 3, 0, 0) = colour;
+      img(x * 4, y * 4 + 2, 0, rgb) = colour;
+      img(x * 4 + 1, y * 4 + 2, 0, rgb) = colour;
+      img(x * 4, y * 4 + 3, 0, rgb) = colour;
+      img(x * 4 + 1, y * 4 + 3, 0, rgb) = colour;
 
-   img(x * 4 + 2, y * 4 + 2, 0, 0) = colour;
-   img(x * 4 + 3, y * 4 + 2, 0, 0) = colour;
-   img(x * 4 + 2, y * 4 + 3, 0, 0) = colour;
-   img(x * 4 + 3, y * 4 + 3, 0, 0) = colour;
+      img(x * 4 + 2, y * 4 + 2, 0, rgb) = colour;
+      img(x * 4 + 3, y * 4 + 2, 0, rgb) = colour;
+      img(x * 4 + 2, y * 4 + 3, 0, rgb) = colour;
+      img(x * 4 + 3, y * 4 + 3, 0, rgb) = colour;
+   }
 }
 
 /*
@@ -94,7 +100,7 @@ void printToScreen(const array<array<bool, 32>, 64> &display, CHIP8state & currS
       {
          if (display[i][j] == true)
          {
-            quadrupleAreaPixels(img, i, j, 0xFFFFFF);
+            quadrupleAreaPixels(img, i, j, 0xFF);
          }
       }
    }
