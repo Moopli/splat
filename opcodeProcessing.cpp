@@ -168,6 +168,88 @@ bool loadSprite(unsigned char sprite, array<array<bool, 32>, 64> &display, int x
 }
 
 /*
+ * @brief Continue to wait until a key is pressed;
+ * program execution cannot continue until a key
+ * is pressed
+ * @returns The value of the key pressed, which is
+ * one of (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C,
+ * D, E, F).
+ *
+ * @note Only valid keys will be returned, and
+ * others will be ignored. The valid keys are:
+ * key4, key5, key6, key7, keyR, keyT, keyY,
+ * keyU, keyF, keyG, keyH, keyJ, keyV, keyB,
+ * keyN, keyM
+ */
+unsigned char getValidKeyPress(CImgDisplay * & display)
+{
+   unsigned int keycode;
+   unsigned char returnCode = 20;
+   while (returnCode == 20)
+   {
+      if (display->is_key())
+      {
+         keycode = display->key(0);
+         switch (keycode)
+         {
+            case cimg::key4:
+               returnCode = 0x1;
+            break;
+            case cimg::key5:
+               returnCode = 0x2;
+            break;
+            case cimg::key6:
+               returnCode = 0x3;
+            break;
+            case cimg::key7:
+               returnCode = 0xC;
+            break;
+            case cimg::keyR:
+               returnCode = 0x4;
+            break;
+            case cimg::keyT:
+               returnCode = 0x5;
+            break;
+            case cimg::keyY:
+               returnCode = 0x6;
+            break;
+            case cimg::keyU:
+               returnCode = 0xD;
+            break;
+            case cimg::keyF:
+               returnCode = 0x7;
+            break;
+            case cimg::keyG:
+               returnCode = 0x8;
+            break;
+            case cimg::keyH:
+               returnCode = 0x9;
+            break;
+            case cimg::keyJ:
+               returnCode = 0xE;
+            break;
+            case cimg::keyV:
+               returnCode = 0xA;
+            break;
+            case cimg::keyB:
+               returnCode = 0x0;
+            break;
+            case cimg::keyN:
+               returnCode = 0xB;
+            break;
+            case cimg::keyM:
+               returnCode = 0xF;
+            break;
+            default:
+               returnCode = 20; // invalid
+            break;
+         }
+      }
+   }
+   return returnCode;
+}
+
+/*
 * @param (short) opcode: the current opcode being processed
 *
 * @param (int *) RAM: a pointer to the RAM
@@ -382,7 +464,44 @@ void determineInstruction(CHIP8state &currState)
          // current. This will obviously need to be updated
          // frequently!
          dbgprint("0xEx??: skip if key with value Vx is or isn't pressed\n");
-         currState.PC += 2;
+         switch (kk)
+         {
+            case 0x9E:
+               // skip if key with value is being pressed
+               // TODO: make an array to map keys to values:
+               // keys[0] = keyB, etc.
+               // simplifies code here: if cDisplay->is_key(key_mappings[x])
+               dbgprint("Skip if key with value ", (short)currState.V[x], " is pressed.\n");
+               if (currState.cDisplay->is_key(key_mappings[currState.V[x]]))
+               {
+                  currState.PC += 4;
+                  dbgprint("Skipped!\n");
+               }
+               else
+               {
+                  currState.PC += 2;
+                  dbgprint("Did not skip.\n");
+               }
+            break;
+            case 0xA1:
+               // skip if it isn't being pressed
+               dbgprint("Skip if key with value ", (short)currState.V[x], " is not pressed.\n");
+               if (currState.cDisplay->is_key(key_mappings[currState.V[x]]))
+               {
+                  currState.PC += 2;
+                  dbgprint("Did not skip.\n");
+               }
+               else
+               {
+                  currState.PC += 4;
+                  dbgprint("Skipped!\n");
+               }
+            break;
+            default:
+               cout << "Invalid opcode!\n";
+               currState.PC += 2;
+            break;
+         }
          break;
       case 0xF:
          process0xF000Codes(currState, x, kk);
@@ -529,8 +648,8 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
 
       case 0x0A:
          dbgprint("0xFx0A: wait for key press and store key in Vx\n");
-         // currState.V[x] = waitKey();
-         // dbgprint("Vx is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         currState.V[x] = getValidKeyPress(currState.cDisplay);
+         dbgprint("V", dec, x, " is now ", dec, static_cast<int>(currState.V[x]), hex, '\n');
          break;
 
       case 0x15:
