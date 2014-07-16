@@ -85,11 +85,11 @@ void quadrupleAreaPixels(CImg<float> & img, int x, int y, float colour)
 */
 void printToScreen(const array<array<bool, 32>, 64> &display, CHIP8state & currState)
 {
-   int scalingFactor = 4;
-   if (!currState.cDisplay)
-   {
-      currState.cDisplay = new CImgDisplay(64 * scalingFactor, 32 * scalingFactor, "", 3, false, false);
-   }
+   // If scalingFactor is changed to anything other than 4, then
+   // the dimensions of the CImgDisplay in stateData.cpp must
+   // also be multiplied by this new factor, instead of the
+   // current multiplication by 4.
+   const int scalingFactor = 4;
 
    cimg_library::CImg<float> img(64 * scalingFactor, 32 * scalingFactor, 1, 3);
    img.fill(0);
