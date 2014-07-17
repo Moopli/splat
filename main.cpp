@@ -35,7 +35,7 @@ void runRom(string filename)
    CHIP8state currState(filename);
    readRom(filename, currState);
    fillDigitSprites(currState);
-   while (currState.PC >= 512 && currState.PC < 4096)
+   while (currState.PC >= 512 && currState.PC < 4096 && !currState.cDisplay->is_closed())
    {
       determineInstruction(currState);
    }

@@ -505,8 +505,6 @@ void determineInstruction(CHIP8state &currState)
          break;
       case 0xF:
          process0xF000Codes(currState, x, kk);
-         dbgprint("0xFx??: miscellaneous\n");
-         currState.PC += 2;
          break;
       default:
          // unknown opcode - do we assert(0) or do we keep going?
@@ -647,19 +645,19 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          break;
 
       case 0x0A:
-         dbgprint("0xFx0A: wait for key press and store key in Vx\n");
+         dbgprint("0xFx0A: wait for key press and store key in Vx = ", currState.V[x], "\n");
          currState.V[x] = getValidKeyPress(currState.cDisplay);
          dbgprint("V", dec, x, " is now ", dec, static_cast<int>(currState.V[x]), hex, '\n');
          break;
 
       case 0x15:
-         dbgprint("0xFx15: set DT to Vx\n");
+         dbgprint("0xFx15: set DT to Vx = ", currState.V[x], "\n");
          // setDT(currState.V[x]);
          // dbgprint("DT is now ", dec, static_cast<int>(currState.V[x]), '\n');
          break;
 
       case 0x18:
-         dbgprint("0xFx15: set ST to Vx\n");
+         dbgprint("0xFx15: set ST to Vx = ", currState.V[x], "\n");
          // setST(currState.V[x]);
          // dbgprint("ST is now ", dec, static_cast<int>(currState.V[x]), '\n');
          break;
@@ -686,12 +684,12 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          break;
 
       case 0x55:
-         dbgprint("0xFx55: Store registers V0 through Vx in memory starting at I\n");
+         dbgprint("0xFx55: Store registers V0 through Vx (", currState.V[x], ") in memory starting at I\n");
          copy_n(begin(currState.V), x, next(begin(currState.RAM), currState.I));
          break;
 
       case 0x65:
-         dbgprint("0xFx65: Read registers V0 through Vx from memory starting at I\n");
+         dbgprint("0xFx65: Read registers V0 through Vx (", currState.V[x], " from memory starting at I\n");
          copy_n(next(begin(currState.RAM), currState.I), x, begin(currState.V));
          break;
 
@@ -699,4 +697,5 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          dbgprint("Unrecognized opcode: 0xF", x, kk, '\n');
          break;
    }
+   currState.PC += 2;
 }
