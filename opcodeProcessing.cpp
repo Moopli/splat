@@ -38,7 +38,7 @@ void dbgprint(Args &&... args)
 /*
  * @brief A simple scaling algorithm - a helper function for
  *        printToScreen()
- * 
+ *
  * @param img The CImg to change pixels in.
  *
  * @param x, y The position in the CImg to change.
@@ -93,7 +93,7 @@ void printToScreen(const array<array<bool, 32>, 64> &display, CHIP8state & currS
 
    cimg_library::CImg<float> img(64 * scalingFactor, 32 * scalingFactor, 1, 3);
    img.fill(0);
-   
+
    for (int j = 0; j < 32; j++)
    {
       for (int i = 0; i < 64; i++)
@@ -684,13 +684,13 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          break;
 
       case 0x55:
-         dbgprint("0xFx55: Store registers V0 through Vx (", currState.V[x], ") in memory starting at I\n");
-         copy_n(begin(currState.V), x, next(begin(currState.RAM), currState.I));
+         dbgprint("0xFx55: Store registers V0 through Vx in memory starting at I\n");
+         copy_n(begin(currState.V), x + 1, next(begin(currState.RAM), currState.I));
          break;
 
       case 0x65:
-         dbgprint("0xFx65: Read registers V0 through Vx (", currState.V[x], " from memory starting at I\n");
-         copy_n(next(begin(currState.RAM), currState.I), x, begin(currState.V));
+         dbgprint("0xFx65: Read registers V0 through Vx from memory starting at I\n");
+         copy_n(next(begin(currState.RAM), currState.I), x + 1, begin(currState.V));
          break;
 
       default:
