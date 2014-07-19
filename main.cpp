@@ -32,7 +32,6 @@ void readRom(const string &filename, CHIP8state &currState)
 
 bool goToNextInstruction(double & prevTime, clock_t & start, const double period)
 {
-   cout << "\n\nPeriod = " << period << "\n\n";
    double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
    if ((duration - prevTime) >= period)
    {
@@ -45,7 +44,6 @@ bool goToNextInstruction(double & prevTime, clock_t & start, const double period
 bool changeTimer(int & dTimer, clock_t & start, double & prevTime)
 {
    double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
-   cout << "duration = " << duration << "\nprevTime = " << prevTime << endl;
    if ((duration - prevTime) >= 1)
    {
       dTimer--;
@@ -72,11 +70,8 @@ void runRom(string filename, double frequency)
       }
       if (goToNextInstruction(continuePrevTime, start, period))
       {
-         cout << "\n\nContinuing...\n\n";
          determineInstruction(currState);
       }
-      else
-         cout << "\n\nWaiting...\n\n";
    }
 }
 
