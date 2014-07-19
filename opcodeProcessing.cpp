@@ -104,6 +104,7 @@ void printToScreen(const array<array<bool, 32>, 64> &display, CHIP8state & currS
          }
       }
    }
+   // Update display window.
    currState.cDisplay->display(img);
 }
 /*
@@ -159,9 +160,6 @@ bool loadSprite(unsigned char sprite, array<array<bool, 32>, 64> &display, int x
       {
          erased = true;
       }
-      dbgprint("sprite = ", dec, (int)sprite, '\n');
-      dbgprint("mask = ", dec, (int)mask, '\n');
-      dbgprint("sprite & mask = ", (int)(sprite & mask), " = ", (bool)(sprite & mask), hex, '\n');
       mask = mask >> 1; // shift right
    }
    return erased;
@@ -459,10 +457,6 @@ void determineInstruction(CHIP8state &currState)
       case 0xE:
          // skip next instruction if a specific key is pressed or not.
          // The key corresponds to the value of Vx.
-         // Let's have another thread to check key presses, and
-         // store a bool array, saying which key is being pressed
-         // current. This will obviously need to be updated
-         // frequently!
          dbgprint("0xEx??: skip if key with value Vx is or isn't pressed\n");
          switch (kk)
          {
@@ -671,26 +665,47 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
       case 0x29:
          dbgprint("0xFx29: set I to location of sprite for digit Vx\n");
          currState.I = currState.V[x] * 5; // digit X is at memory location X * 5
+         dbgprint("V[", (short)x, "] = ", (short)currState.V[x], '\n');
          dbgprint("I is now ", hex, currState.I, '\n');
+         dbgprint("This sprite stores the digit ", dec, (short)currState.I/5, '\n');
          break;
 
       case 0x33:
          dbgprint("0xFx33: Store BCD representation of Vx starting at memory locations I\n");
+         dbgprint("V[x] = V[", (short)x, "] = ", (short)currState.V[x], '\n');
          currState.RAM[currState.I] = currState.V[x] / 100;            // first digit
+         dbgprint("RAM[", (short)currState.I, "] = ", (short)currState.V[x]/100, '\n');
          currState.RAM[currState.I + 1] = (currState.V[x] % 100) / 10; // second digit
+         dbgprint("RAM[", (short)currState.I + 1, "] = ", (short)currState.V[x] % 100 / 10, '\n');
          currState.RAM[currState.I + 2] = currState.V[x] % 10;         // third digit
-         dbgprint("RAM at I, I + 1, I + 2: ", static_cast<int>(currState.RAM[currState.I]), ' ');
-         dbgprint(static_cast<int>(currState.RAM[currState.I + 1]), static_cast<int>(currState.RAM[currState.I + 2]), '\n');
+         dbgprint("RAM[", (short)currState.I + 2, "] = ", (short)currState.V[x] % 10, '\n');
+         dbgprint("RAM at I, I + 1, I + 2: ", dec, static_cast<int>(currState.RAM[currState.I]), ' ');
+         dbgprint(static_cast<int>(currState.RAM[currState.I + 1]), static_cast<int>(currState.RAM[currState.I + 2]), hex, '\n');
          break;
 
       case 0x55:
-         dbgprint("0xFx55: Store registers V0 through Vx (", currState.V[x], ") in memory starting at I\n");
-         copy_n(begin(currState.V), x, next(begin(currState.RAM), currState.I));
+         // score issue might be related to these instructions below... TODO: INVESTIGATE!
+         dbgprint("0xFx55: Store registers V0 through Vx (", currState.V[x], ") in memory starting at I (", (short)currState.I, ")\n");
+         copy_n(begin(currState.V), x + 1, next(begin(currState.RAM), currState.I));
+         for (int i = 0; i < x + 1; i++)
+         {
+            //currState.V[i] = currState.RAM[currState.I + i];
+            dbgprint("V[I + ", i, "] = ", (short)currState.V[currState.I + i], '\n');
+            dbgprint("RAM[I + ", i, "] =  ", (short)currState.RAM[currState.I + i], '\n');
+         }
          break;
 
       case 0x65:
-         dbgprint("0xFx65: Read registers V0 through Vx (", currState.V[x], " from memory starting at I\n");
-         copy_n(next(begin(currState.RAM), currState.I), x, begin(currState.V));
+         // Opposite of previous case (0x55)
+         dbgprint("0xFx65: Read registers V0 through Vx (", (short)currState.V[x], ") from memory starting at I (", (short)currState.I, ")\n");
+         copy_n(next(begin(currState.RAM), currState.I), x + 1, begin(currState.V));
+         for (int i = 0; i < x + 1; i++)
+         {
+            //currState.RAM[currState.I + i] = currState.V[i];
+            dbgprint("RAM[I + ", i, "] = ", (short)currState.RAM[currState.I + i], '\n');
+            dbgprint("V[I + ", i, "] =  ", (short)currState.V[currState.I + i], '\n');
+         }
+
          break;
 
       default:
