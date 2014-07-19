@@ -447,15 +447,11 @@ void determineInstruction(CHIP8state &currState)
          dbgprint("case 0xDxyn\n");
          dbgprint("load ", n, " byte sprite at I (", currState.I);
          dbgprint(") to (", (short)currState.V[x], ", ", (short)currState.V[y], ")\n");
-         currState.V[15] = 0;
          for (int i = 0; i < n; i++)
          {
             sprite = currState.RAM[currState.I + i];
             // take bits of this sprite and put into display
-            if (loadSprite(sprite, currState.display, currState.V[x], currState.V[y] + i))
-            {
-               currState.V[15] = 1;
-            }
+            currState.V[15] = loadSprite(sprite, currState.display, currState.V[x], currState.V[y] + i);
          }
          printToScreen(currState.display, currState);
          currState.PC += 2;
