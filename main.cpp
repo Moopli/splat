@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 #include "opcodeProcessing.h"
-#include <thread>
 #include <CImg.h>
+#include <ctime>
 
 using namespace std;
 using namespace cimg_library;
@@ -30,14 +30,45 @@ void readRom(const string &filename, CHIP8state &currState)
    }
 }
 
-void runRom(string filename)
+double changeTimer(CHIP8state & currState, clock_t & start, double prevTime, bool & goOn, const int period)
+{
+   double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
+   cout << "duration = " << duration << "\nprevTime = " << prevTime << endl;
+   if ((duration - prevTime) >= period)
+   {
+      goOn = true;
+   }
+   else
+   {
+      goOn = false;
+   }
+   if ((duration - prevTime) >= 1)
+   {
+      currState.delayTimer--;
+      return duration;
+   }
+   return prevTime;
+}
+
+void runRom(string filename, double frequency)
 {
    CHIP8state currState(filename);
    readRom(filename, currState);
    fillDigitSprites(currState);
+   clock_t start = std::clock();
+   double period = (double)(1 / frequency);
+   double prevTime = 0;
+   bool goOn = true;
    while (currState.PC >= 512 && currState.PC < 4096 && !currState.cDisplay->is_closed())
    {
-      determineInstruction(currState);
+      if (currState.delayTimer > 0)
+      {
+         prevTime = changeTimer(currState, start, prevTime, goOn, period);
+      }
+      if (goOn)
+      {
+         determineInstruction(currState);
+      }
    }
 }
 
@@ -45,8 +76,8 @@ int main(int argc, char **argv)
 {
    vector<string> args(argv, argv + argc);
    string filename = (args.size() > 1) ? args[1] : "../c8games/PONG";
-   thread mainThread(runRom, filename);
-   mainThread.join();
+   frequency = atoi(((args.size() > 2) ? args[2] : "400").c_str());
+   runRom(filename, frequency);
    
    return 0;
 }

@@ -35,6 +35,12 @@ void dbgprint(Args &&... args)
 }
 #endif
 
+// Timers
+void timeFunction()
+{
+   
+}
+
 /*
  * @brief A simple scaling algorithm - a helper function for
  *        printToScreen()
@@ -634,8 +640,8 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
    {
       case 0x07:
          dbgprint("0xFx07: set Vx to DT\n");
-         // currState.V[x] = getDT();
-         // dbgprint("Vx is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         currState.V[x] = currState.delayTimer;
+         dbgprint("Vx is now ", dec, static_cast<int>(currState.V[x]), '\n');
          break;
 
       case 0x0A:
@@ -645,13 +651,14 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          break;
 
       case 0x15:
-         dbgprint("0xFx15: set DT to Vx = ", currState.V[x], "\n");
+         dbgprint("0xFx15: set DT to Vx = ", dec, (short)currState.V[x], "\n");
+         currState.delayTimer = currState.V[x];
          // setDT(currState.V[x]);
-         // dbgprint("DT is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         dbgprint("DT is now ", dec, static_cast<int>(currState.V[x]), '\n');
          break;
 
       case 0x18:
-         dbgprint("0xFx15: set ST to Vx = ", currState.V[x], "\n");
+         dbgprint("0xFx15: set ST to Vx = ", (short)currState.V[x], "\n");
          // setST(currState.V[x]);
          // dbgprint("ST is now ", dec, static_cast<int>(currState.V[x]), '\n');
          break;
@@ -659,14 +666,14 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
       case 0x1E:
          dbgprint("0xFx1E: set I to I + Vx\n");
          currState.I += currState.V[x];
-         dbgprint("I is now ", hex, currState.I, '\n');
+         dbgprint("I is now ", hex, (short)currState.I, '\n');
          break;
 
       case 0x29:
          dbgprint("0xFx29: set I to location of sprite for digit Vx\n");
          currState.I = currState.V[x] * 5; // digit X is at memory location X * 5
          dbgprint("V[", (short)x, "] = ", (short)currState.V[x], '\n');
-         dbgprint("I is now ", hex, currState.I, '\n');
+         dbgprint("I is now ", hex, (short)currState.I, '\n');
          dbgprint("This sprite stores the digit ", dec, (short)currState.I/5, '\n');
          break;
 
