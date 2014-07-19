@@ -30,24 +30,29 @@ void readRom(const string &filename, CHIP8state &currState)
    }
 }
 
-double changeTimer(CHIP8state & currState, clock_t & start, double prevTime, bool & goOn, const int period)
+bool goToNextInstruction(double & prevTime, clock_t & start, const double period)
+{
+   cout << "\n\nPeriod = " << period << "\n\n";
+   double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
+   if ((duration - prevTime) >= period)
+   {
+      prevTime = duration;
+      return true;
+   }
+   return false;
+}
+
+bool changeTimer(int & dTimer, clock_t & start, double & prevTime)
 {
    double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
    cout << "duration = " << duration << "\nprevTime = " << prevTime << endl;
-   if ((duration - prevTime) >= period)
-   {
-      goOn = true;
-   }
-   else
-   {
-      goOn = false;
-   }
    if ((duration - prevTime) >= 1)
    {
-      currState.delayTimer--;
-      return duration;
+      dTimer--;
+      prevTime = duration;
+      return true; // Yes, delay timer was changed
    }
-   return prevTime;
+   return false; // No, delay timer is the same
 }
 
 void runRom(string filename, double frequency)
@@ -56,19 +61,22 @@ void runRom(string filename, double frequency)
    readRom(filename, currState);
    fillDigitSprites(currState);
    clock_t start = std::clock();
-   double period = (double)(1 / frequency);
+   double period = (double)(1 / (double)frequency);
    double prevTime = 0;
-   bool goOn = true;
+   double continuePrevTime = 0;
    while (currState.PC >= 512 && currState.PC < 4096 && !currState.cDisplay->is_closed())
    {
       if (currState.delayTimer > 0)
       {
-         prevTime = changeTimer(currState, start, prevTime, goOn, period);
+         (void)changeTimer(currState.delayTimer, start, prevTime);
       }
-      if (goOn)
+      if (goToNextInstruction(continuePrevTime, start, period))
       {
+         cout << "\n\nContinuing...\n\n";
          determineInstruction(currState);
       }
+      else
+         cout << "\n\nWaiting...\n\n";
    }
 }
 
@@ -76,7 +84,7 @@ int main(int argc, char **argv)
 {
    vector<string> args(argv, argv + argc);
    string filename = (args.size() > 1) ? args[1] : "../c8games/PONG";
-   int frequency = atoi(((args.size() > 2) ? args[2] : "400").c_str());
+   int frequency = atoi(((args.size() > 2) ? args[2] : "300").c_str());
    runRom(filename, frequency);
    
    return 0;
