@@ -38,7 +38,7 @@ void dbgprint(Args &&... args)
 /*
  * @brief A simple scaling algorithm - a helper function for
  *        printToScreen()
- * 
+ *
  * @param img The CImg to change pixels in.
  *
  * @param x, y The position in the CImg to change.
@@ -93,7 +93,7 @@ void printToScreen(const array<array<bool, 32>, 64> &display, CHIP8state & currS
 
    cimg_library::CImg<float> img(64 * scalingFactor, 32 * scalingFactor, 1, 3);
    img.fill(0);
-   
+
    for (int j = 0; j < 32; j++)
    {
       for (int i = 0; i < 64; i++)
@@ -684,12 +684,10 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          break;
 
       case 0x55:
-         // score issue might be related to these instructions below... TODO: INVESTIGATE!
          dbgprint("0xFx55: Store registers V0 through Vx (", currState.V[x], ") in memory starting at I (", (short)currState.I, ")\n");
          copy_n(begin(currState.V), x + 1, next(begin(currState.RAM), currState.I));
          for (int i = 0; i < x + 1; i++)
          {
-            //currState.V[i] = currState.RAM[currState.I + i];
             dbgprint("V[I + ", i, "] = ", (short)currState.V[currState.I + i], '\n');
             dbgprint("RAM[I + ", i, "] =  ", (short)currState.RAM[currState.I + i], '\n');
          }
@@ -701,7 +699,6 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          copy_n(next(begin(currState.RAM), currState.I), x + 1, begin(currState.V));
          for (int i = 0; i < x + 1; i++)
          {
-            //currState.RAM[currState.I + i] = currState.V[i];
             dbgprint("RAM[I + ", i, "] = ", (short)currState.RAM[currState.I + i], '\n');
             dbgprint("V[I + ", i, "] =  ", (short)currState.V[currState.I + i], '\n');
          }
