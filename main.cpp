@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 {
    vector<string> args(argv, argv + argc);
    string filename = (args.size() > 1) ? args[1] : "../c8games/PONG";
-   frequency = atoi(((args.size() > 2) ? args[2] : "400").c_str());
+   int frequency = atoi(((args.size() > 2) ? args[2] : "400").c_str());
    runRom(filename, frequency);
    
    return 0;
