@@ -18,10 +18,14 @@ void fillDigitSprites(CHIP8state &currState);
 void readRom(const string &filename, CHIP8state &currState)
 {
    ifstream fin(filename, ios::binary);
-   istreambuf_iterator<char> first(fin); // buf for unformatted extractions
+   istreambuf_iterator<char> first(fin), last; // buf for unformatted extractions
 
    // copy file to RAM starting at PC until 0x1FFF
-   copy_n(first, currState.RAM.size() - currState.PC, currState.RAM.data() + currState.PC);
+   decltype(currState.RAM.size()) copies = 0; //number of characters copied so far
+   copy_if(first, last, next(begin(currState.RAM), currState.PC), [&](char)
+   {
+		return copies++ < currState.RAM.size() - currState.PC; //copy as long as we don't overrun RAM
+	});
 
    // make sure that EOF was reached (or there's only whitespace left)
    if (!(fin >> ws).eof())
@@ -81,7 +85,7 @@ int main(int argc, char **argv)
    string filename = (args.size() > 1) ? args[1] : "../c8games/PONG";
    int frequency = atoi(((args.size() > 2) ? args[2] : "300").c_str());
    runRom(filename, frequency);
-   
+
    return 0;
 }
 
