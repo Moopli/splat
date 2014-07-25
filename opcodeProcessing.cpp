@@ -38,7 +38,7 @@ void dbgprint(Args &&... args)
 // Timers
 void timeFunction()
 {
-   
+
 }
 
 /*
@@ -154,15 +154,15 @@ void clearDisplay(array<array<bool, 32>, 64> &display)
 */
 bool loadSprite(unsigned char sprite, array<array<bool, 32>, 64> &display, int x, int y)
 {
-   x %= 64;
    y %= 32;
 
    short mask = 128; // 1000 0000
    bool erased = false;
    for (int i = 0; i < 8; i++)
    {
-      display[x + i][y] ^= (bool)(sprite & mask);
-      if (!display[x + i][y])
+   	auto xIndex = (x + i) % 64;
+      display[xIndex][y] ^= (bool)(sprite & mask);
+      if (!display[xIndex][y])
       {
          erased = true;
       }
@@ -658,7 +658,7 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
       case 0x18:
          dbgprint("0xFx15: set ST to Vx = ", (short)currState.V[x], "\n");
          // setST(currState.V[x]);
-         // dbgprint("ST is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         dbgprint("ST is now ", dec, static_cast<int>(currState.V[x]), '\n');
          break;
 
       case 0x1E:
@@ -693,7 +693,7 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          copy_n(begin(currState.V), x + 1, next(begin(currState.RAM), currState.I));
          for (int i = 0; i < x + 1; i++)
          {
-            dbgprint("V[I + ", i, "] = ", (short)currState.V[currState.I + i], '\n');
+            dbgprint("V[", i, "] = ", (short)currState.V[i], '\n');
             dbgprint("RAM[I + ", i, "] =  ", (short)currState.RAM[currState.I + i], '\n');
          }
          break;
@@ -705,7 +705,7 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          for (int i = 0; i < x + 1; i++)
          {
             dbgprint("RAM[I + ", i, "] = ", (short)currState.RAM[currState.I + i], '\n');
-            dbgprint("V[I + ", i, "] =  ", (short)currState.V[currState.I + i], '\n');
+            dbgprint("V[", i, "] =  ", (short)currState.V[i], '\n');
          }
 
          break;
