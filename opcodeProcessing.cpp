@@ -450,8 +450,10 @@ void determineInstruction(CHIP8state &currState)
          for (int i = 0; i < n; i++)
          {
             sprite = currState.RAM[currState.I + i];
+            dbgprint("sprite = ", dec, sprite, '\n');
             // take bits of this sprite and put into display
             currState.V[15] = loadSprite(sprite, currState.display, currState.V[x], currState.V[y] + i);
+            dbgprint("currState.V[15] = ", currState.V[15], '\n');
          }
          printToScreen(currState.display, currState);
          currState.PC += 2;
