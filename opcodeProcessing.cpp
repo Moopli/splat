@@ -329,7 +329,8 @@ void determineInstruction(CHIP8state &currState)
          // skip next instruction if Vx equals a constant
          // if Vx == kk, PC += 4
          // else, PC += 2
-         dbgprint("0x3xkk: skip if Vx equals kk\n");
+         dbgprint("0x3xkk: skip if Vx equals kk (");
+         dbgprint(dec, (short)kk, ")\n", hex);
          if (currState.V[x] != kk)
          {
             currState.PC += 4;
@@ -345,7 +346,8 @@ void determineInstruction(CHIP8state &currState)
          break;
       case 0x4:
          // skip next instruction if Vx doesn't equal a constant
-         dbgprint("0x4xkk: skip if Vx doesn't equal kk\n");
+         dbgprint("0x4xkk: skip if Vx doesn't equal kk (");
+         dbgprint(dec, (short)kk, ")\n", hex);
          if (currState.V[x] != kk)
          {
             currState.PC += 4;
@@ -364,6 +366,8 @@ void determineInstruction(CHIP8state &currState)
          // if Vx == Vy, PC += 4
          // else, PC == 2
          dbgprint("0x5xy0: skip if Vx equals Vy\n");
+         dbgprint(dec, "Vx = ", (short)currState.V[x], "; Vy = ", \
+                 (short)currState.V[y], hex, '\n');
          // if Vx == Vy, PC += 4
          if (currState.V[x] == currState.V[y])
          {
@@ -380,16 +384,14 @@ void determineInstruction(CHIP8state &currState)
          break;
       case 0x6:
          // set Vx to a constant
-         dbgprint("0x6xkk: load kk into Vx\n");
-
+         dbgprint("0x6xkk: load kk (", (short)kk,") into Vx\n");
          currState.V[x] = kk;
          dbgprint("V", dec, x, " set to ", hex, kk, " = ", dec, kk, '\n');
          currState.PC += 2;
          break;
       case 0x7:
          // add a constant to Vx, and store in Vx
-         dbgprint("0x7xkk: add kk to Vx\n");
-
+         dbgprint("0x7xkk: add kk", (short)kk," to Vx\n");
          currState.V[x] += kk;
          dbgprint("V", dec, x, " set to ", kk, " so now equals ", static_cast<int>(currState.V[x]), '\n');
          currState.PC += 2;
@@ -438,22 +440,22 @@ void determineInstruction(CHIP8state &currState)
          uniform_int_distribution<> dist(0x00, 0xFF);
          auto newVal = dist(randGen) & kk;
          currState.V[x] = newVal;
-         dbgprint("V", dec, x, " set to ", newVal, '\n');
+         dbgprint("V", dec, x, " set to ", (short)newVal, '\n');
          currState.PC += 2;
          break;
       }
       case 0xD:
          // display sprite on screen
          dbgprint("case 0xDxyn\n");
-         dbgprint("load ", n, " byte sprite at I (", currState.I);
+         dbgprint("load ", n, " byte sprite at I (", (short)currState.I);
          dbgprint(") to (", (short)currState.V[x], ", ", (short)currState.V[y], ")\n");
          for (int i = 0; i < n; i++)
          {
             sprite = currState.RAM[currState.I + i];
-            dbgprint("sprite = ", dec, sprite, '\n');
+            dbgprint("sprite = ", dec, (short)sprite, '\n');
             // take bits of this sprite and put into display
             currState.V[15] = loadSprite(sprite, currState.display, currState.V[x], currState.V[y] + i);
-            dbgprint("currState.V[15] = ", currState.V[15], '\n');
+            dbgprint("currState.V[15] = ", (short)currState.V[15], '\n');
          }
          printToScreen(currState.display, currState);
          currState.PC += 2;
@@ -643,7 +645,7 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
          break;
 
       case 0x0A:
-         dbgprint("0xFx0A: wait for key press and store key in Vx = ", currState.V[x], "\n");
+         dbgprint("0xFx0A: wait for key press and store key in Vx = ", dec, (short)currState.V[x], "\n");
          currState.V[x] = getValidKeyPress(currState.cDisplay);
          dbgprint("V", dec, x, " is now ", dec, static_cast<int>(currState.V[x]), hex, '\n');
          break;
