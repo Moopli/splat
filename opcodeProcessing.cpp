@@ -317,6 +317,7 @@ void determineInstruction(CHIP8state &currState)
          dbgprint("PC was ", hex, currState.PC, '\n');
          currState.PC = nnn;
          dbgprint("PC is now ", hex, currState.PC, '\n');
+
          break;
       case 0x2:
          dbgprint("0x2nnn: call subroutine at nnn\n");
@@ -330,7 +331,7 @@ void determineInstruction(CHIP8state &currState)
          // if Vx == kk, PC += 4
          // else, PC += 2
          dbgprint("0x3xkk: skip if Vx equals kk\n");
-         if (currState.V[x] != kk)
+         if (currState.V[x] == kk)
          {
             currState.PC += 4;
             dbgprint("Jump 4\n");

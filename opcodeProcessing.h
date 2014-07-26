@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include "stateData.h"
 #include <CImg.h>
 

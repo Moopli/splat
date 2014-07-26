@@ -1,19 +1,21 @@
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
+#include <ctime>
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "opcodeProcessing.h"
+
 #include <CImg.h>
-#include <ctime>
+#include "opcodeProcessing.h"
+#include "statedata.h"
 
 using namespace std;
 using namespace cimg_library;
 
-void fillDigitSprites(CHIP8state &currState);
+void fillDigitSprites(CHIP8state & currState);
 
 void readRom(const string &filename, CHIP8state &currState)
 {
@@ -34,7 +36,7 @@ void readRom(const string &filename, CHIP8state &currState)
    }
 }
 
-bool goToNextInstruction(double & prevTime, clock_t & start, const double period)
+bool goToNextInstruction(double & prevTime, clock_t start, const double period)
 {
    double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
    if ((duration - prevTime) >= period)
@@ -45,9 +47,9 @@ bool goToNextInstruction(double & prevTime, clock_t & start, const double period
    return false;
 }
 
-bool changeTimer(int & dTimer, clock_t & start, double & prevTime)
+bool changeTimer(int & dTimer, clock_t start, double & prevTime)
 {
-   double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
+	double duration = (clock() - start);
    if ((duration - prevTime) >= 1)
    {
       dTimer--;
@@ -82,9 +84,11 @@ void runRom(string filename, double frequency)
 int main(int argc, char **argv)
 {
    vector<string> args(argv, argv + argc);
+
    string filename = (args.size() > 1) ? args[1] : "../c8games/PONG";
-   int frequency = atoi(((args.size() > 2) ? args[2] : "300").c_str());
-   runRom(filename, frequency);
+   int frequency = stoi(args.size() > 2 ? args[2] : "300");
+
+	runRom(filename, frequency);
 
    return 0;
 }
