@@ -32,6 +32,7 @@ template <typename... Args>
 void dbgprint(Args &&... args)
 {
    swallow({(cout << forward<Args>(args), 0)...});
+   cout << flush;
 }
 #endif
 
@@ -392,7 +393,7 @@ void determineInstruction(CHIP8state &currState)
          dbgprint("0x7xkk: add kk to Vx\n");
 
          currState.V[x] += kk;
-         dbgprint("V", dec, x, " set to ", kk, " so now equals ", static_cast<int>(currState.V[x]), '\n');
+         dbgprint("V", dec, x, " set to ", kk, " so now equals ", +currState.V[x], '\n');
          currState.PC += 2;
          break;
       case 0x8:
@@ -447,7 +448,7 @@ void determineInstruction(CHIP8state &currState)
          // display sprite on screen
          dbgprint("case 0xDxyn\n");
          dbgprint("load ", n, " byte sprite at I (", currState.I);
-         dbgprint(") to (", (short)currState.V[x], ", ", (short)currState.V[y], ")\n");
+         dbgprint(") to (", +currState.V[x], ", ", +currState.V[y], ")\n");
          for (int i = 0; i < n; i++)
          {
             sprite = currState.RAM[currState.I + i];
@@ -468,7 +469,7 @@ void determineInstruction(CHIP8state &currState)
                // TODO: make an array to map keys to values:
                // keys[0] = keyB, etc.
                // simplifies code here: if cDisplay->is_key(key_mappings[x])
-               dbgprint("Skip if key with value ", (short)currState.V[x], " is pressed.\n");
+               dbgprint("Skip if key with value ", +currState.V[x], " is pressed.\n");
                if (currState.cDisplay->is_key(key_mappings[currState.V[x]]))
                {
                   currState.PC += 4;
@@ -482,7 +483,7 @@ void determineInstruction(CHIP8state &currState)
             break;
             case 0xA1:
                // skip if it isn't being pressed
-               dbgprint("Skip if key with value ", (short)currState.V[x], " is not pressed.\n");
+               dbgprint("Skip if key with value ", +currState.V[x], " is not pressed.\n");
                if (currState.cDisplay->is_key(key_mappings[currState.V[x]]))
                {
                   currState.PC += 2;
@@ -563,67 +564,67 @@ void process0x8000Codes(CHIP8state &currState, uint16_t opcode)
    {
       case 0:
          // Set V[x] to V[y]
-         dbgprint("Setting Vx (", (short)currState.V[x], ") to Vy (", (short)currState.V[y], ")\n");
+         dbgprint("Setting Vx (", +currState.V[x], ") to Vy (", +currState.V[y], ")\n");
          currState.V[x] = currState.V[y];
-         dbgprint("Vx is now: ", (short)currState.V[x], "\n");
+         dbgprint("Vx is now: ", +currState.V[x], "\n");
          break;
       case 1:
          dbgprint("Vx = Vx OR Vy");
-         dbgprint("Vx = ", (short)currState.V[x], " OR ", (short)currState.V[y], "\n");
+         dbgprint("Vx = ", +currState.V[x], " OR ", +currState.V[y], "\n");
          // Set V[x] to V[x] OR V[y]
          currState.V[x] |= currState.V[y];
-         dbgprint("Vx is now: ", (short)currState.V[x], "\n");
+         dbgprint("Vx is now: ", +currState.V[x], "\n");
          break;
       case 2:
          dbgprint("Vx = Vx AND Vy\n");
-         dbgprint("Vx = ", (short)currState.V[x], " AND ", (short)currState.V[y], "\n");
+         dbgprint("Vx = ", +currState.V[x], " AND ", +currState.V[y], "\n");
          // Set V[x] to V[x] AND V[y]
          currState.V[x] &= currState.V[y];
-         dbgprint("Vx is now ", (short)currState.V[x], "\n");
+         dbgprint("Vx is now ", +currState.V[x], "\n");
          break;
       case 3:
          dbgprint("V[x] = V[x] XOR V[y]\n");
-         dbgprint("Vx = ", (short)currState.V[x], "\nVy = ", (short)currState.V[y], "\n");
+         dbgprint("Vx = ", +currState.V[x], "\nVy = ", +currState.V[y], "\n");
          // Set V[x] to V[x] XOR V[y]
          currState.V[x] ^= currState.V[y];
-         dbgprint("Vx is now: ", (short)currState.V[x], "\n");
+         dbgprint("Vx is now: ", +currState.V[x], "\n");
          break;
       case 4:
          dbgprint("V[x] = V[x] + V[y]; Vf = carry\n");
          // Set V[x] to V[x] + V[y], and set Vf to 1 if there is a carry
-         dbgprint((short)currState.V[x], " = ", (short)currState.V[x], " + ", (short)currState.V[y], "\n");
+         dbgprint(+currState.V[x], " = ", +currState.V[x], " + ", +currState.V[y], "\n");
          currState.V[0xF] = (currState.V[x] + currState.V[y] > 255);
          currState.V[x] += currState.V[y];
-         dbgprint("V[x] is now ", (short)currState.V[x], "\nVf = ", (short)currState.V[0xF], "\n");
+         dbgprint("V[x] is now ", +currState.V[x], "\nVf = ", +currState.V[0xF], "\n");
          break;
       case 5:
          dbgprint("V[x] = V[x] - V[y]\n");
          // Set V[x] to V[x] - V[y], and set Vf to NOT borrow
-         dbgprint((short)currState.V[x], " = ", (short)currState.V[x], " - ", (short)currState.V[y], "\n");
+         dbgprint(+currState.V[x], " = ", +currState.V[x], " - ", +currState.V[y], "\n");
          currState.V[0xF] = (currState.V[x] > currState.V[y]);
          currState.V[x] = currState.V[x] - currState.V[y];
-         dbgprint("V[x] is now: ", (short)currState.V[x], "\nVf = ", (short)currState.V[0xF], "\n");
+         dbgprint("V[x] is now: ", +currState.V[x], "\nVf = ", +currState.V[0xF], "\n");
          break;
       case 6:
          // Shift V[x] right
-         dbgprint("currState.V[x] = ", (short)currState.V[x], "\n");
+         dbgprint("currState.V[x] = ", +currState.V[x], "\n");
          currState.V[0xF] = getLastNibble(currState.V[x]) & 00000001;
          currState.V[x] = currState.V[x] >> 1; // divide by 2
-         dbgprint("After right shift: ", (short)currState.V[x], "\n");
+         dbgprint("After right shift: ", +currState.V[x], "\n");
          break;
       case 7:
          // Set V[x] = V[y] - V[x], and set Vf to NOT borrow
          dbgprint("V[x] = V[y] - V[x]; V[f] = !BORROW\n");
-         dbgprint((short)currState.V[x], " = ", (short)currState.V[y], " - ", (short)currState.V[x], "\n");
+         dbgprint(+currState.V[x], " = ", +currState.V[y], " - ", +currState.V[x], "\n");
          currState.V[0xF] = (currState.V[y] > currState.V[x]);
          currState.V[x] = currState.V[y] - currState.V[x];
-         dbgprint("V[x] = ", (short)currState.V[x], "\n");
+         dbgprint("V[x] = ", +currState.V[x], "\n");
          break;
       case 0xE:
-         dbgprint("Left shift V[x] = ", (short)currState.V[x], "\n");
+         dbgprint("Left shift V[x] = ", +currState.V[x], "\n");
          currState.V[0xF] = (currState.V[x] & 10000000);
          currState.V[x] = currState.V[x] << 1; // multiply by 2
-         dbgprint("V[x] = ", (short)currState.V[x], hex, "\n");
+         dbgprint("V[x] = ", +currState.V[x], hex, "\n");
          break;
       default:
          dbgprint("An error occurred!\nInvalid instruction: ", hex, opcode, "\n");
@@ -638,73 +639,73 @@ void process0xF000Codes(CHIP8state &currState, int x, int kk)
       case 0x07:
          dbgprint("0xFx07: set Vx to DT\n");
          currState.V[x] = currState.delayTimer;
-         dbgprint("Vx is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         dbgprint("Vx is now ", dec, +currState.V[x], '\n');
          break;
 
       case 0x0A:
          dbgprint("0xFx0A: wait for key press and store key in Vx = ", currState.V[x], "\n");
          currState.V[x] = getValidKeyPress(currState.cDisplay);
-         dbgprint("V", dec, x, " is now ", dec, static_cast<int>(currState.V[x]), hex, '\n');
+         dbgprint("V", dec, x, " is now ", dec, +currState.V[x], hex, '\n');
          break;
 
       case 0x15:
-         dbgprint("0xFx15: set DT to Vx = ", dec, (short)currState.V[x], "\n");
+         dbgprint("0xFx15: set DT to Vx = ", dec, +currState.V[x], "\n");
          currState.delayTimer = currState.V[x];
          // setDT(currState.V[x]);
-         dbgprint("DT is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         dbgprint("DT is now ", dec, +currState.V[x], '\n');
          break;
 
       case 0x18:
-         dbgprint("0xFx15: set ST to Vx = ", (short)currState.V[x], "\n");
+         dbgprint("0xFx15: set ST to Vx = ", +currState.V[x], "\n");
          // setST(currState.V[x]);
-         dbgprint("ST is now ", dec, static_cast<int>(currState.V[x]), '\n');
+         dbgprint("ST is now ", dec, +currState.V[x], '\n');
          break;
 
       case 0x1E:
          dbgprint("0xFx1E: set I to I + Vx\n");
          currState.I += currState.V[x];
-         dbgprint("I is now ", hex, (short)currState.I, '\n');
+         dbgprint("I is now ", hex, +currState.I, '\n');
          break;
 
       case 0x29:
          dbgprint("0xFx29: set I to location of sprite for digit Vx\n");
          currState.I = currState.V[x] * 5; // digit X is at memory location X * 5
-         dbgprint("V[", (short)x, "] = ", (short)currState.V[x], '\n');
-         dbgprint("I is now ", hex, (short)currState.I, '\n');
-         dbgprint("This sprite stores the digit ", dec, (short)currState.I/5, '\n');
+         dbgprint("V[", +x, "] = ", +currState.V[x], '\n');
+         dbgprint("I is now ", hex, +currState.I, '\n');
+         dbgprint("This sprite stores the digit ", dec, +currState.I/5, '\n');
          break;
 
       case 0x33:
          dbgprint("0xFx33: Store BCD representation of Vx starting at memory locations I\n");
-         dbgprint("V[x] = V[", (short)x, "] = ", (short)currState.V[x], '\n');
+         dbgprint("V[x] = V[", +x, "] = ", +currState.V[x], '\n');
          currState.RAM[currState.I] = currState.V[x] / 100;            // first digit
-         dbgprint("RAM[", (short)currState.I, "] = ", (short)currState.V[x]/100, '\n');
+         dbgprint("RAM[", +currState.I, "] = ", +currState.V[x]/100, '\n');
          currState.RAM[currState.I + 1] = (currState.V[x] % 100) / 10; // second digit
-         dbgprint("RAM[", (short)currState.I + 1, "] = ", (short)currState.V[x] % 100 / 10, '\n');
+         dbgprint("RAM[", +currState.I + 1, "] = ", +currState.V[x] % 100 / 10, '\n');
          currState.RAM[currState.I + 2] = currState.V[x] % 10;         // third digit
-         dbgprint("RAM[", (short)currState.I + 2, "] = ", (short)currState.V[x] % 10, '\n');
-         dbgprint("RAM at I, I + 1, I + 2: ", dec, static_cast<int>(currState.RAM[currState.I]), ' ');
-         dbgprint(static_cast<int>(currState.RAM[currState.I + 1]), static_cast<int>(currState.RAM[currState.I + 2]), hex, '\n');
+         dbgprint("RAM[", +currState.I + 2, "] = ", +currState.V[x] % 10, '\n');
+         dbgprint("RAM at I, I + 1, I + 2: ", dec, +currState.RAM[currState.I], ' ');
+         dbgprint(+currState.RAM[currState.I + 1], +currState.RAM[currState.I + 2], hex, '\n');
          break;
 
       case 0x55:
-         dbgprint("0xFx55: Store registers V0 through Vx (", currState.V[x], ") in memory starting at I (", (short)currState.I, ")\n");
+         dbgprint("0xFx55: Store registers V0 through Vx (", currState.V[x], ") in memory starting at I (", +currState.I, ")\n");
          copy_n(begin(currState.V), x + 1, next(begin(currState.RAM), currState.I));
          for (int i = 0; i < x + 1; i++)
          {
-            dbgprint("V[", i, "] = ", (short)currState.V[i], '\n');
-            dbgprint("RAM[I + ", i, "] =  ", (short)currState.RAM[currState.I + i], '\n');
+            dbgprint("V[", i, "] = ", +currState.V[i], '\n');
+            dbgprint("RAM[I + ", i, "] =  ", +currState.RAM[currState.I + i], '\n');
          }
          break;
 
       case 0x65:
          // Opposite of previous case (0x55)
-         dbgprint("0xFx65: Read registers V0 through Vx (", (short)currState.V[x], ") from memory starting at I (", (short)currState.I, ")\n");
+         dbgprint("0xFx65: Read registers V0 through Vx (", +currState.V[x], ") from memory starting at I (", +currState.I, ")\n");
          copy_n(next(begin(currState.RAM), currState.I), x + 1, begin(currState.V));
          for (int i = 0; i < x + 1; i++)
          {
-            dbgprint("RAM[I + ", i, "] = ", (short)currState.RAM[currState.I + i], '\n');
-            dbgprint("V[", i, "] =  ", (short)currState.V[i], '\n');
+            dbgprint("RAM[I + ", i, "] = ", +currState.RAM[currState.I + i], '\n');
+            dbgprint("V[", i, "] =  ", +currState.V[i], '\n');
          }
 
          break;
