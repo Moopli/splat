@@ -49,7 +49,7 @@ bool goToNextInstruction(double & prevTime, clock_t start, const double period)
 
 bool changeTimer(int & dTimer, clock_t start, double & prevTime)
 {
-	double duration = (clock() - start);
+	double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
    if ((duration - prevTime) >= 1)
    {
       dTimer--;
