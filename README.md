@@ -6,7 +6,7 @@ For more information about CHIP-8, see http://en.wikipedia.org/wiki/CHIP-8
 
 ####Compiling and running the code:
 
-`$ g++ stateData.cpp opcodeProcessing.cpp main.cpp -o SPLAT -Wall -pedantic -lm -O2 -L/usr/X11R6/lib -std=c++11 -pthread -lX11`
+`$ g++ stateData.cpp opcodeProcessing.cpp main.cpp -o SPLAT -Wall -lm -O2 -L/usr/X11R6/lib -std=c++11 -pthread -lX11`
 
 `$ ./SPLAT path_to_CHIP-8_ROM_file > output.txt  # Redirect the output to a text file so you don't have to see it while running the program. Also, path_to_CHIP-8_ROM_file can be relative from the current directory, or absolute.`
 
