@@ -1,5 +1,5 @@
-# splat
-====
+splat
+======
 
 Splat is a CHIP-8 emulator.
 For more information about CHIP-8, see http://en.wikipedia.org/wiki/CHIP-8
